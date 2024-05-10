@@ -35,10 +35,12 @@ FORMS += \
 
 win32 {
 
-INCLUDEPATH += ../include/ffmpeg4.2.1
+INCLUDEPATH += ../include/ffmpeg4.2.1 \
+               ../include/sdl2.0.10
 
-
-LIBS += -L$$PWD/../third_lib/ffmpeg4.2.1  \
+LIBS += -L$$PWD/../third_lib/ffmpeg4.2.1   \
+        -L$$PWD/../third_lib/x64/sdl2.0.10    \
         -lavutil
+        -lSDL2
 }
 
