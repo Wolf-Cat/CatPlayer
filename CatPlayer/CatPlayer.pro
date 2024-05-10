@@ -32,3 +32,11 @@ HEADERS += \
 
 FORMS += \
         Mainwindow.ui
+
+win32 {
+
+INCLUDEPATH += ../include/ffmpeg4.2.1
+
+LIBS += -L../third_lib/ffmpeg4.2.1 \
+    -lavutil
+}
