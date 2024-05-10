@@ -37,6 +37,8 @@ win32 {
 
 INCLUDEPATH += ../include/ffmpeg4.2.1
 
-LIBS += -L../third_lib/ffmpeg4.2.1 \
-    -lavutil
+
+LIBS += -L$$PWD/../third_lib/ffmpeg4.2.1  \
+        -lavutil
 }
+
