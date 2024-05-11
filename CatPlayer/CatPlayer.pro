@@ -25,13 +25,16 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
         main.cpp \
-        Mainwindow.cpp
+        Mainwindow.cpp \
+    TitleBar.cpp
 
 HEADERS += \
-        Mainwindow.h
+        Mainwindow.h \
+    TitleBar.h
 
 FORMS += \
-        Mainwindow.ui
+        Mainwindow.ui \
+    TitleBar.ui
 
 win32 {
 
