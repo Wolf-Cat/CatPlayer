@@ -26,15 +26,18 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
         main.cpp \
         Mainwindow.cpp \
-    TitleBar.cpp
+    TitleBar.cpp \
+    CtrlBar.cpp
 
 HEADERS += \
         Mainwindow.h \
-    TitleBar.h
+    TitleBar.h \
+    CtrlBar.h
 
 FORMS += \
         Mainwindow.ui \
-    TitleBar.ui
+    TitleBar.ui \
+    CtrlBar.ui
 
 win32 {
 
