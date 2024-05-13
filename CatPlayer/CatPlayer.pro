@@ -27,12 +27,15 @@ SOURCES += \
         main.cpp \
         Mainwindow.cpp \
     TitleBar.cpp \
-    CtrlBar.cpp
+    CtrlBar.cpp \
+    MediaCentre.cpp
 
 HEADERS += \
         Mainwindow.h \
     TitleBar.h \
-    CtrlBar.h
+    CtrlBar.h \
+    MediaCentre.h \
+    AvMsgQueue.h
 
 FORMS += \
         Mainwindow.ui \
