@@ -25,17 +25,17 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
         main.cpp \
-        Mainwindow.cpp \
     TitleBar.cpp \
     CtrlBar.cpp \
-    MediaCentre.cpp
+    MediaCentre.cpp \
+    MainWindow.cpp
 
 HEADERS += \
-        Mainwindow.h \
     TitleBar.h \
     CtrlBar.h \
     MediaCentre.h \
-    AvMsgQueue.h
+    AvMsgQueue.h \
+    MainWindow.h
 
 FORMS += \
         Mainwindow.ui \
