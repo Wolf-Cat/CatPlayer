@@ -15,6 +15,11 @@ public:
     explicit CtrlBar(QWidget *parent = 0);
     ~CtrlBar();
 
+    void InitConnect();
+
+public slots:
+    void OnBtnPlayPauseClicked();
+
 private:
     Ui::CtrlBar *ui;
 };

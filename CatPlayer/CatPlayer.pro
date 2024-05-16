@@ -29,14 +29,16 @@ SOURCES += \
     CtrlBar.cpp \
     MediaCentre.cpp \
     MainWindow.cpp \
-    AvMsgQueue.cpp
+    AvMsgQueue.cpp \
+    MyPlayer.cpp
 
 HEADERS += \
     TitleBar.h \
     CtrlBar.h \
     MediaCentre.h \
     AvMsgQueue.h \
-    MainWindow.h
+    MainWindow.h \
+    MyPlayer.h
 
 FORMS += \
         Mainwindow.ui \

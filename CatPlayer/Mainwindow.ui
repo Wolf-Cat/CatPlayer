@@ -40,6 +40,16 @@
      <string>视频画面渲染区</string>
     </property>
    </widget>
+   <widget class="CtrlBar" name="ctrlWidget" native="true">
+    <property name="geometry">
+     <rect>
+      <x>9</x>
+      <y>489</y>
+      <width>771</width>
+      <height>81</height>
+     </rect>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
@@ -67,6 +77,12 @@
    <class>TitleBar</class>
    <extends>QWidget</extends>
    <header location="global">TitleBar.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>CtrlBar</class>
+   <extends>QWidget</extends>
+   <header location="global">CtrlBar.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
