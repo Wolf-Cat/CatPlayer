@@ -1,8 +1,14 @@
 #ifndef AV_MESSAGE_H
 #define AV_MESSAGE_H
 
+extern "C"
+{
+
 #include "SDL.h"
+#include "SDL_mutex.h"
 #include "libavutil/avutil.h"
+
+}
 
 enum AvMsgType {
     ERROR = -1,
@@ -14,7 +20,7 @@ enum AvMsgType {
 };
 
 struct AvMsg {
-    int msgId;   // 指令：播放，暂停等
+    AvMsgType type = AvMsgType::ERROR;   // 指令：播放，暂停等
     int arg1 = -1;
     int arg2 = -1;
     void *pAvObj = nullptr;  // 用于释放Frame或者Packet等包
@@ -23,25 +29,30 @@ struct AvMsg {
     void FreeAvObj()
     {
         av_free(pAvObj);
+        pAvObj = nullptr;
     }
 };
 
-class AvMsgQueue {
-   AvMsg *pFirstMsg = nullptr;
-   AvMsg *pLastMsg = nullptr;
-   int msgCount = 0;
-   bool abort = false;    // 中止消息进入
+class AvMsgQueue
+{
 
-   SDL_mutex *pMutex = nullptr;
-   SDL_cond *pCond = nullptr;
+public:
+    void InitQueue();
+    void FlushQueue();
+    void DestoryQueue();
+    void AbortGetMessage();
+    void PutMessage(AvMsg *pMsg);
+    AvMsg* GetMessage(bool block);
+    void RemoveMessageByType(AvMsgType type);
 
-   void InitQueue();
-   void FlushQueue();
-   void DestoryQueue();
-   void AbortGetMessage();
-   void PutMessage(AvMsg *pMsg);
-   void GetMessage(bool block);
-   void RemoveMessage(AvMsgType type);
-}
+private:
+    AvMsg *m_pFirstMsg = nullptr;
+    AvMsg *m_pLastMsg = nullptr;
+    int m_msgCount = 0;
+    bool m_abort = true;    // 中止消息进入
+
+    SDL_mutex *m_pMutex = nullptr;
+    SDL_cond *m_pCond = nullptr;
+};
 
 #endif // AV_MESSAGE_H
