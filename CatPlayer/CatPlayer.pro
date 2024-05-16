@@ -28,7 +28,8 @@ SOURCES += \
     TitleBar.cpp \
     CtrlBar.cpp \
     MediaCentre.cpp \
-    MainWindow.cpp
+    MainWindow.cpp \
+    AvMsgQueue.cpp
 
 HEADERS += \
     TitleBar.h \
@@ -48,8 +49,8 @@ INCLUDEPATH += ../include/ffmpeg4.2.1 \
                ../include/sdl2.0.10
 
 LIBS += -L$$PWD/../third_lib/ffmpeg4.2.1   \
-        -L$$PWD/../third_lib/x64/sdl2.0.10    \
-        -lavutil
+        -L$$PWD/../third_lib/sdl2.0.10/x86  \
+        -lavutil  \
         -lSDL2
 }
 
