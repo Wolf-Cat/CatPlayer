@@ -30,7 +30,7 @@ SOURCES += \
     MediaCentre.cpp \
     MainWindow.cpp \
     AvMsgQueue.cpp \
-    MyPlayer.cpp
+    ../player/MyPlayer.cpp  \
 
 HEADERS += \
     TitleBar.h \
@@ -38,7 +38,7 @@ HEADERS += \
     MediaCentre.h \
     AvMsgQueue.h \
     MainWindow.h \
-    MyPlayer.h
+    ../player/MyPlayer.h
 
 FORMS += \
         Mainwindow.ui \
@@ -48,7 +48,8 @@ FORMS += \
 win32 {
 
 INCLUDEPATH += ../include/ffmpeg4.2.1 \
-               ../include/sdl2.0.10
+               ../include/sdl2.0.10  \
+               ../player
 
 LIBS += -L$$PWD/../third_lib/ffmpeg4.2.1   \
         -L$$PWD/../third_lib/sdl2.0.10/x86  \
