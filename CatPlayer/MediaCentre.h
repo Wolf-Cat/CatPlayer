@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include "MyPlayer.h"
+#include "SDL.h"
 
 class MediaCentre : public QObject
 {
@@ -11,6 +12,7 @@ public:
     explicit MediaCentre(QObject *parent = nullptr);
     void Init();
     void AsyncPreparePlayer();
+    static int PlayerMsgloop(void* arg);
     void SetMediaSourcePath(std::string path);
     void StopPlayer();
 
@@ -20,6 +22,9 @@ public slots:
 
 private:
     MyPlayer *pPlayer = nullptr;
+
+    SDL_mutex *m_pMutex = nullptr;
+    SDL_Thread *m_pMsgThread = nullptr;   // 消息循环的线程
 };
 
 #endif // MEDIACENTRE_H

@@ -1,19 +1,25 @@
 #ifndef AV_MESSAGE_H
 #define AV_MESSAGE_H
 
+#ifdef __cplusplus
+
 extern "C"
 {
+#endif
 
-#include "SDL.h"
-#include "SDL_mutex.h"
 #include "libavutil/avutil.h"
+#include <SDL.h>
+#include "SDL_mutex.h"
 
+#ifdef __cplusplus
 }
+#endif
 
 enum AvMsgType {
     ERROR = -1,
     FLUSH = 0,     // 清空数据
 
+    PREPARED = 1000,     // 播放器所需要资源已经准备，比如解复用器，解码器，渲染初始化
     START_PLAY = 1001,   // 开始播放
     PAUSE_PLAY = 1002,   // 停止播放
     SEEK_PLAY = 1003     // 拖拽播放
