@@ -12,9 +12,8 @@ public:
     void Prepare();
     void StreamOpen();
 
-private:
-    std::string m_path= "testVideo.mp4";
     AvMsgQueue m_queue;
+    AudioVideoState m_avState;
 };
 
 #endif // MYPLAYER_H

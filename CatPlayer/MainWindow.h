@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include "MediaCentre.h"
 
 namespace Ui {
 class MainWindow;
@@ -13,10 +14,13 @@ class MainWindow : public QMainWindow
 
 public:
     explicit MainWindow(QWidget *parent = 0);
+    void Init();
     ~MainWindow();
 
 private:
     Ui::MainWindow *ui;
+
+    MediaCentre m_mediaCenter;
 };
 
 #endif // MAINWINDOW_H

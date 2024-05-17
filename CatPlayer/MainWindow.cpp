@@ -8,6 +8,11 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 }
 
+void MainWindow::Init()
+{
+    m_mediaCenter.Init();
+}
+
 MainWindow::~MainWindow()
 {
     delete ui;

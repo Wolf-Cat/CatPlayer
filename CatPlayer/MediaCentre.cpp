@@ -7,7 +7,7 @@ MediaCentre::MediaCentre(QObject *parent) : QObject(parent)
 
 void MediaCentre::Init()
 {
-
+    AsyncPreparePlayer();
 }
 
 void MediaCentre::AsyncPreparePlayer()
@@ -18,6 +18,12 @@ void MediaCentre::AsyncPreparePlayer()
     }
 
     m_pMsgThread = SDL_CreateThread(PlayerMsgloop, "PlayerMsgloop", this);
+
+    if (m_pPlayer == nullptr) {
+        m_pPlayer = std::make_shared<MyPlayer>();
+        m_pPlayer->StreamOpen();
+        m_pPlayer->m_avState.filePath = "testVideo.mp4";
+    }
 }
 
 int MediaCentre::PlayerMsgloop(void* arg)

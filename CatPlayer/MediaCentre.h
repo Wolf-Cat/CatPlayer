@@ -2,7 +2,8 @@
 #define MEDIACENTRE_H
 
 #include <QObject>
-#include "MyPlayer.h"
+#include <memory>
+#include "../player/MyPlayer.h"
 #include "SDL.h"
 
 class MediaCentre : public QObject
@@ -21,7 +22,7 @@ signals:
 public slots:
 
 private:
-    MyPlayer *pPlayer = nullptr;
+    std::shared_ptr<MyPlayer> m_pPlayer = nullptr;
 
     SDL_mutex *m_pMutex = nullptr;
     SDL_Thread *m_pMsgThread = nullptr;   // 消息循环的线程
