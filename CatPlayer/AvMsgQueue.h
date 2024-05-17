@@ -1,19 +1,9 @@
 #ifndef AV_MESSAGE_H
 #define AV_MESSAGE_H
 
-#ifdef __cplusplus
-
-extern "C"
-{
-#endif
-
 #include "libavutil/avutil.h"
-#include <SDL.h>
-#include "SDL_mutex.h"
-
-#ifdef __cplusplus
-}
-#endif
+#include <mutex>
+#include <condition_variable>
 
 enum AvMsgType {
     ERROR = -1,
@@ -57,8 +47,8 @@ private:
     int m_msgCount = 0;
     bool m_abort = true;    // 中止消息进入
 
-    SDL_mutex *m_pMutex = nullptr;
-    SDL_cond *m_pCond = nullptr;
+    std::mutex m_mutex;
+    std::condition_variable m_condVar;
 };
 
 #endif // AV_MESSAGE_H

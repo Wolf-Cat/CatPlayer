@@ -2,8 +2,6 @@
 
 void AvMsgQueue::InitQueue()
 {
-    m_pMutex = SDL_CreateMutex();
-    m_pCond = SDL_CreateCond();
     m_abort = true;  // 初始化时中止消息循环
 }
 
@@ -19,12 +17,9 @@ void AvMsgQueue::DestoryQueue()
 
 void AvMsgQueue::AbortGetMessage()
 {
-    SDL_LockMutex(m_pMutex);
+    std::lock_guard<std::mutex> lock(m_mutex);
     m_abort = true;
-
-    SDL_CondSignal(m_pCond);
-
-    SDL_UnlockMutex(m_pMutex);
+    m_condVar.notify_one();
 }
 
 void AvMsgQueue::PutMessage(AvMsg *pMsg)
@@ -33,10 +28,9 @@ void AvMsgQueue::PutMessage(AvMsg *pMsg)
         return;
     }
 
-    SDL_LockMutex(m_pMutex);
+    std::lock_guard<std::mutex> lock(m_mutex);
 
     if (m_abort) {
-        SDL_UnlockMutex(m_pMutex);
         return;
     }
 
@@ -50,19 +44,17 @@ void AvMsgQueue::PutMessage(AvMsg *pMsg)
     m_pLastMsg->pNext = nullptr;
     m_msgCount++;
 
-    SDL_CondSignal(m_pCond);
-
-    SDL_UnlockMutex(m_pMutex);
+    m_condVar.notify_one();
 }
 
 AvMsg* AvMsgQueue::GetMessage(bool block)
 {
-    SDL_LockMutex(m_pMutex);
+
+    std::lock_guard<std::mutex> lock(m_mutex);
 
     AvMsg *pRetMsg = nullptr;
     for(;;) {
         if (m_abort) {
-            SDL_UnlockMutex(m_pMutex);
             return pRetMsg;
         }
 
@@ -71,7 +63,6 @@ AvMsg* AvMsgQueue::GetMessage(bool block)
             m_pFirstMsg = m_pFirstMsg->pNext;
             m_msgCount--;
 
-            SDL_UnlockMutex(m_pMutex);
             return pRetMsg;
 
         }
@@ -79,11 +70,10 @@ AvMsg* AvMsgQueue::GetMessage(bool block)
         if (!block) {   // 非阻塞方式取数据
             break;
         } else {
-            SDL_CondWait(m_pCond, m_pMutex);
+            m_condVar.notify_one();
         }
     }
 
-    SDL_UnlockMutex(m_pMutex);
     return pRetMsg;
 }
 

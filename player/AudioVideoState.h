@@ -5,6 +5,6 @@
 
 struct AudioVideoState {
     AVFormatContext *pAvContext = NULL;   // 媒体文件上下文
-}
+};
 
 #endif // AUDIOVIDEOSTATE_H
