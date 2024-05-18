@@ -1,9 +1,16 @@
 #ifndef AV_MESSAGE_H
 #define AV_MESSAGE_H
 
-#include "libavutil/avutil.h"
 #include <mutex>
 #include <condition_variable>
+
+extern "C"
+{
+
+#include "libavutil/avutil.h"
+#include "SDL.h"
+
+}
 
 enum AvMsgType {
     ERROR = -1,

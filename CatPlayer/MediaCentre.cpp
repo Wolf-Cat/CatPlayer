@@ -21,8 +21,7 @@ void MediaCentre::AsyncPreparePlayer()
 
     if (m_pPlayer == nullptr) {
         m_pPlayer = std::make_shared<MyPlayer>();
-        m_pPlayer->StreamOpen();
-        m_pPlayer->m_avState.filePath = "testVideo.mp4";
+        m_pPlayer->StreamOpen("testVideo.mp4");
     }
 }
 

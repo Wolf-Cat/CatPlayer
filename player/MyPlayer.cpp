@@ -1,4 +1,6 @@
 #include "MyPlayer.h"
+#include "libavutil/log.h"
+
 
 MyPlayer::MyPlayer()
 {
@@ -15,7 +17,11 @@ MyPlayer::MyPlayer()
  * 初始化音量
 */
 
-void MyPlayer::StreamOpen()
+void MyPlayer::StreamOpen(const std::string& filePath)
 {
-
+    m_filePath = filePath;
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER) == 0)
+    {
+        av_log(NULL, AV_LOG_DEBUG, "SDL init video audio timer success, %s", SDL_GetError());
+    }
 }
