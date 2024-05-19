@@ -29,7 +29,7 @@ void MyPlayer::InitAvEnviroment(const std::string& filePath)
 
     // 获得媒体文件上下文
     int ret = 100;
-    ret = avformat_open_input(&m_pFormatCtx, filePath.c_str(), NULL, NULL);
+    ret = avformat_open_input(&m_pFormatCtx, "F:/CatPlayer/build-CatPlayer-Desktop_Qt_5_10_1_MinGW_32bit-Debug/debug/testVideo.mp4", NULL, NULL);
     if (ret < 0)
     {
        QString err = av_myerr2str(ret);
