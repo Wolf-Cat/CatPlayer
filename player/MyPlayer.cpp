@@ -1,5 +1,7 @@
 #include "MyPlayer.h"
 #include "libavutil/log.h"
+#include "libavutil/avutil.h"
+#include "AvPlayDef.h"
 #include <QDebug>
 
 MyPlayer::MyPlayer()
@@ -26,9 +28,12 @@ void MyPlayer::InitAvEnviroment(const std::string& filePath)
     }
 
     // 获得媒体文件上下文
-    if (avformat_open_input(&m_pFormatCtx, filePath.c_str(), NULL, NULL) < 0)
+    int ret = 100;
+    ret = avformat_open_input(&m_pFormatCtx, filePath.c_str(), NULL, NULL);
+    if (ret < 0)
     {
-        qDebug() << filePath.c_str() <<" avformat_open_input sucess ";
+       QString err = av_myerr2str(ret);
+       qDebug() << "avformat_open_input failed: " << err;
     }
 
     // 初始化音视频包队列（AVPacket)

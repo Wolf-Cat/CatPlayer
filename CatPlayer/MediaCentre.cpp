@@ -21,7 +21,7 @@ void MediaCentre::AsyncPreparePlayer()
 
     if (m_pPlayer == nullptr) {
         m_pPlayer = std::make_shared<MyPlayer>();
-        m_pPlayer->InitAvEnviroment("./testVideo.mp4");
+        m_pPlayer->InitAvEnviroment("testVideo.mp4");
     }
 }
 
