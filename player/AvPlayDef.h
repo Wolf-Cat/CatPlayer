@@ -1,12 +1,16 @@
 #ifndef AVPLAYDEF_H
 #define AVPLAYDEF_H
 
+#include "SDL.h"
+
 struct FrameQueue {
 
 };
 
 struct AvPacketQueue {
-
+    int packetCount;
+    SDL_mutex *mutex;
+    SDL_cond *cond;
 };
 
 inline char* av_myerr2str(int errnum)

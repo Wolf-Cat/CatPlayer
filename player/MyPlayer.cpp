@@ -36,6 +36,31 @@ void MyPlayer::InitAvEnviroment(const std::string& filePath)
        qDebug() << "avformat_open_input failed: " << err;
     }
 
+    // 从打开的多媒体文件中获取流相关的信息
+    ret = avformat_find_stream_info(m_pFormatCtx, NULL);
+    if (ret < 0)
+    {
+        QString err = av_myerr2str(ret);
+        qDebug() << "avformat_find_stream_info failed: " << err;
+    }
+
+    for (int i = 0; i < m_pFormatCtx->nb_streams; i++) {
+        if (m_pFormatCtx->streams[i]->codec->codec_type == AVMEDIA_TYPE_AUDIO && m_audioIndex)
+        {
+            m_audioIndex = i;
+            StreamComponentOpen(m_audioIndex);
+        }
+
+        if (m_pFormatCtx->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO && m_videoIndex)
+        {
+            m_videoIndex = i;
+            StreamComponentOpen(m_videoIndex);
+        }
+    }
+
+    av_dump_format(m_pFormatCtx, 0, "F:/CatPlayer/build-CatPlayer-Desktop_Qt_5_10_1_MinGW_32bit-Debug/debug/testVideo.mp4", 0);
+
+
     // 初始化音视频包队列（AVPacket)
 
     // 初始化音视频帧队列 （AVFrame）
@@ -47,4 +72,26 @@ void MyPlayer::InitAvEnviroment(const std::string& filePath)
 void MyPlayer::ReadDataThread(void *arg)
 {
 
+}
+
+void MyPlayer::StreamComponentOpen(int streamIndex)
+{
+    if (m_pFormatCtx == nullptr || streamIndex < 0 || streamIndex >= m_pFormatCtx->nb_streams) {
+        return;
+    }
+
+    AVCodecContext *pCodecCtx = avcodec_alloc_context3(NULL);   // 创建解码器上下文
+
+    int ret = 0;
+    ret = avcodec_parameters_to_context(pCodecCtx, m_pFormatCtx->streams[streamIndex]->codecpar);
+    if (ret < 0) {
+        return;
+    }
+
+    AVCodec *pCodec = avcodec_find_decoder(pCodecCtx->codec_id);             // 解码器
+    if (pCodecCtx->codec_type == AVMEDIA_TYPE_AUDIO) {
+        m_audioStream = m_pFormatCtx->streams[streamIndex];
+    } else if (pCodecCtx->codec_type == AVMEDIA_TYPE_VIDEO) {
+        m_videoStream = m_pFormatCtx->streams[streamIndex];
+    }
 }

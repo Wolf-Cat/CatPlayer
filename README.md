@@ -23,10 +23,8 @@
 以音频为基准，视频向音频同步
 
 * 使用到的FFmpeg重要的函数
-avformat_alloc_context
-avformat_open_input      // 打开文件，如果是网络文件则创建网络链接等
-avformat_find_stream_info
-stream_component_open
+avformat_open_input        // 打开文件，如果是网络文件则创建网络链接等
+avformat_find_stream_info  // 检索流信息
 av_read_frame
 avcodec_send_packet
 avcodec_receive_frame
