@@ -60,18 +60,44 @@ void MyPlayer::InitAvEnviroment(const std::string& filePath)
 
     av_dump_format(m_pFormatCtx, 0, "F:/CatPlayer/build-CatPlayer-Desktop_Qt_5_10_1_MinGW_32bit-Debug/debug/testVideo.mp4", 0);
 
-
     // 初始化音视频包队列（AVPacket)
+    InitAVPacketQueue();
 
     // 初始化音视频帧队列 （AVFrame）
 
     // 创建解复用器读取数据线程
-    // m_pReadDataThread = std::make_shared<std::thread>(&MyPlayer::ReadDataThread, this);
+    m_pReadDataThread = std::make_shared<std::thread>(&MyPlayer::ReadDataThread, this);
 }
 
-void MyPlayer::ReadDataThread(void *arg)
+int MyPlayer::ReadDataThread(void *arg)
 {
+    MyPlayer *pPlayer = (MyPlayer *)arg;
+    AVPacket *pkt = (AVPacket *)malloc(sizeof(AVPacket));
+    for (;;) {
+        if (pPlayer->m_bQuit) {
+            break;
+        }
 
+        if (av_read_frame(pPlayer->m_pFormatCtx, pkt) == 0)
+        {
+            if (pkt->stream_index == pPlayer->m_videoIndex) {
+                pPlayer->m_videoPacketQueue.PutPacket(pkt);
+            } else if (pkt->stream_index == pPlayer->m_audioIndex) {
+                pPlayer->m_audioPacketQueue.PutPacket(pkt);
+            }
+        }
+    }
+
+    return 0;
+}
+
+void MyPlayer::InitAVPacketQueue()
+{
+    m_audioPacketQueue.mutex = SDL_CreateMutex();
+    m_audioPacketQueue.cond = SDL_CreateCond();
+
+    m_videoPacketQueue.mutex = SDL_CreateMutex();
+    m_videoPacketQueue.cond = SDL_CreateCond();
 }
 
 void MyPlayer::StreamComponentOpen(int streamIndex)
@@ -91,7 +117,14 @@ void MyPlayer::StreamComponentOpen(int streamIndex)
     AVCodec *pCodec = avcodec_find_decoder(pCodecCtx->codec_id);             // 解码器
     if (pCodecCtx->codec_type == AVMEDIA_TYPE_AUDIO) {
         m_audioStream = m_pFormatCtx->streams[streamIndex];
+        m_audioCodecCtx = pCodecCtx;
+        m_audioCodec = pCodec;
     } else if (pCodecCtx->codec_type == AVMEDIA_TYPE_VIDEO) {
         m_videoStream = m_pFormatCtx->streams[streamIndex];
+        m_videoCodecCtx = pCodecCtx;
+        m_videoCodec = pCodec;
+
+        m_videoWidth = m_videoCodecCtx->width;
+        m_videoHeight = m_videoCodecCtx->height;
     }
 }

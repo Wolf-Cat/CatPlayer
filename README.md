@@ -25,8 +25,9 @@
 * 使用到的FFmpeg重要的函数
 avformat_open_input        // 打开文件，如果是网络文件则创建网络链接等
 avformat_find_stream_info  // 检索流信息
-av_read_frame
-avcodec_send_packet
+avcodec_open2              // 打开编解码器
+avcodec_send_packet        // 将AVPacket数据发送给解码器进行解码
+av_read_frame              // 读取码流中的音频若干帧或者视频一帧
 avcodec_receive_frame
 
 * 使用到的FFmpeg重要结构体
@@ -38,8 +39,8 @@ AVStream
 AVPacket
 AVFrame
 
-AVCodecContext
-AVCodec
+AVCodecContext       // 解码器上下文
+AVCodec              // 解码器
 AVCodecParameters
 
 * 使用的SDL重要函数

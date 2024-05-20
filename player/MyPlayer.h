@@ -3,7 +3,7 @@
 
 #include <string>
 #include <thread>
-#include "AudioVideoState.h"
+#include "AvPlayDef.h"
 #include "AvMsgQueue.h"
 
 #ifdef __cplusplus
@@ -25,16 +25,16 @@ public:
     MyPlayer();
     void Prepare();
     void InitAvEnviroment(const std::string& filePath);
-    void ReadDataThread(void *arg);
+    static int ReadDataThread(void *arg);
 
-    void InitAVPacketQueue(AVMediaType codec_type);
+    void InitAVPacketQueue();
     void InitAVFrameQueue();
     void StreamComponentOpen(int streamIndex);   // 根据流索引得到流AVStream和打开相关组件
 
     AvMsgQueue m_queue;
     std::string m_filePath;
 
-private:
+public:
     std::shared_ptr<std::thread> m_pReadDataThread;
     AVFormatContext *m_pFormatCtx = NULL;
     int m_audioIndex = -1;
@@ -44,13 +44,20 @@ private:
     AVStream *m_audioStream = NULL;
     AVCodecContext *m_audioCodecCtx = NULL;
     AVCodec *m_audioCodec = NULL;
+    AvPacketQueue m_audioPacketQueue;
 
     // 视频相关
     AVStream *m_videoStream = NULL;
     AVCodecContext *m_videoCodecCtx = NULL;
     AVCodec *m_videoCodec = NULL;
+    AvPacketQueue m_videoPacketQueue;
+    int m_videoWidth = 0;
+    int m_videoHeight = 0;
 
     // 音视频同步相关
+
+    // 其余
+    bool m_bQuit = false;
 };
 
 #endif // MYPLAYER_H
