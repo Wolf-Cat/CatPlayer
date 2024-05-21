@@ -81,12 +81,17 @@ int MyPlayer::ReadDataThread(void *arg)
             break;
         }
 
-        if (av_read_frame(pPlayer->m_pFormatCtx, pkt) == 0)
+        int ret = av_read_frame(pPlayer->m_pFormatCtx, pkt);
+        if (ret == 0)
         {
             if (pkt->stream_index == pPlayer->m_videoIndex) {
                 pPlayer->m_videoPacketQueue.PutPacket(pkt);
             } else if (pkt->stream_index == pPlayer->m_audioIndex) {
                 pPlayer->m_audioPacketQueue.PutPacket(pkt);
+            }
+        } else if (ret < 0) {
+            if(pPlayer->m_pFormatCtx->pb->error == 0) {
+                SDL_Delay(100);
             }
         }
     }
@@ -99,20 +104,27 @@ int MyPlayer::DecodeVideoThread(void *arg)
     MyPlayer *pPlayer = (MyPlayer *)arg;
 
     int frameFinished = -1;
-    AVPacket *pkt = nullptr;
+    AVPacket pkt;
     AVFrame *pFrame = av_frame_alloc();
 
     for (;;) {
         if (pPlayer->m_videoPacketQueue.GetPacket(true, &pkt) == 0) {
-            if (pkt != nullptr) {
-                int ret = avcodec_decode_video2(pPlayer->m_videoCodecCtx, pFrame, &frameFinished, pkt);
-                if (ret < 0) {
-                    qDebug() << "avcodec_decode_video2";
+            if (1) {
+                int ret = avcodec_decode_video2(pPlayer->m_videoCodecCtx, pFrame, &frameFinished, &pkt);
+                if (frameFinished) {
+                    int k = 1;
                 }
+                if (ret < 0) {
+                    QString err = QString(av_myerr2str(ret));
+                    qDebug() << "avcodec_decode_video2 err: " << err;
+                }
+
+                // 如果返回值为正值，则表示已经读取了一部分数据但是还不足以解码一帧。这通常发生在流的末端，或者解码器需要更多数据来完成解码时
+                av_packet_unref(&pkt);
             }
         }
 
-        //av_packet_free()
+
 
     }
 
