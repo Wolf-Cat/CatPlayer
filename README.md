@@ -25,10 +25,11 @@
 * 使用到的FFmpeg重要的函数
 avformat_open_input        // 打开文件，如果是网络文件则创建网络链接等
 avformat_find_stream_info  // 检索流信息
-avcodec_open2              // 打开编解码器
+avcodec_open2              // Initialize the AVCodecContext to use the given AVCodec 
 avcodec_send_packet        // 将AVPacket数据发送给解码器进行解码
 av_read_frame              // 读取码流中的音频若干帧或者视频一帧
 avcodec_receive_frame
+avcodec_decode_video2      // 将视频包解码成视频帧
 
 * 使用到的FFmpeg重要结构体
 AVFormatContext

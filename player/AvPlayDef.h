@@ -47,7 +47,7 @@ struct AvPacketQueue {
         SDL_UnlockMutex(mutex);
     }
 
-    int GetPacket(bool isblock, AVPacket *pOut)
+    int GetPacket(bool isblock, AVPacket **pOut)
     {
         int ret = -100;
         SDL_LockMutex(mutex);
@@ -55,7 +55,7 @@ struct AvPacketQueue {
         for(;;)
         {
             if (pFirstNode != NULL) {
-                pOut = pFirstNode->pkt;
+                *pOut = pFirstNode->pkt;
                 count--;
                 ret = 0;
                 break;

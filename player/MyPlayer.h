@@ -26,6 +26,7 @@ public:
     void Prepare();
     void InitAvEnviroment(const std::string& filePath);
     static int ReadDataThread(void *arg);
+    static int DecodeVideoThread(void *arg);
 
     void InitAVPacketQueue();
     void InitAVFrameQueue();
@@ -35,7 +36,7 @@ public:
     std::string m_filePath;
 
 public:
-    std::shared_ptr<std::thread> m_pReadDataThread;
+    std::shared_ptr<std::thread> m_pReadDataThread = nullptr;
     AVFormatContext *m_pFormatCtx = NULL;
     int m_audioIndex = -1;
     int m_videoIndex = -1;
@@ -53,6 +54,8 @@ public:
     AvPacketQueue m_videoPacketQueue;
     int m_videoWidth = 0;
     int m_videoHeight = 0;
+
+    std::shared_ptr<std::thread> m_pDecodeVideoThread = nullptr;
 
     // 音视频同步相关
 

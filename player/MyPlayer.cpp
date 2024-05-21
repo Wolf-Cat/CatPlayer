@@ -67,6 +67,9 @@ void MyPlayer::InitAvEnviroment(const std::string& filePath)
 
     // 创建解复用器读取数据线程
     m_pReadDataThread = std::make_shared<std::thread>(&MyPlayer::ReadDataThread, this);
+
+    // 创建视频包解码线程
+    m_pDecodeVideoThread = std::make_shared<std::thread>(&MyPlayer::DecodeVideoThread, this);
 }
 
 int MyPlayer::ReadDataThread(void *arg)
@@ -89,6 +92,30 @@ int MyPlayer::ReadDataThread(void *arg)
     }
 
     return 0;
+}
+
+int MyPlayer::DecodeVideoThread(void *arg)
+{
+    MyPlayer *pPlayer = (MyPlayer *)arg;
+
+    int frameFinished = -1;
+    AVPacket *pkt = nullptr;
+    AVFrame *pFrame = av_frame_alloc();
+
+    for (;;) {
+        if (pPlayer->m_videoPacketQueue.GetPacket(true, &pkt) == 0) {
+            if (pkt != nullptr) {
+                int ret = avcodec_decode_video2(pPlayer->m_videoCodecCtx, pFrame, &frameFinished, pkt);
+                if (ret < 0) {
+                    qDebug() << "avcodec_decode_video2";
+                }
+            }
+        }
+
+        //av_packet_free()
+
+    }
+
 }
 
 void MyPlayer::InitAVPacketQueue()
@@ -126,5 +153,10 @@ void MyPlayer::StreamComponentOpen(int streamIndex)
 
         m_videoWidth = m_videoCodecCtx->width;
         m_videoHeight = m_videoCodecCtx->height;
+    }
+
+    if (avcodec_open2(pCodecCtx, pCodec, NULL) < 0)  // Initialize the AVCodecContext to use the given AVCodec
+    {
+        qDebug() << "avcodec_open2 failed";
     }
 }
