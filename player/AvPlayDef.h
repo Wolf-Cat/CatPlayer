@@ -14,7 +14,7 @@ struct FrameQueue {
 
 struct AVPacketNode {
     AVPacket *pkt = NULL;
-    AVPacket *next = NULL;
+    AVPacketNode *next = NULL;
 };
 
 struct AvPacketQueue {
