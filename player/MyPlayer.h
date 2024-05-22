@@ -30,6 +30,8 @@ public:
     void InitAVPacketQueue();
     void InitAVFrameQueue();
     void StreamComponentOpen(int streamIndex);   // 根据流索引得到流AVStream和打开相关组件
+    void LoadAudioPara();
+    static void SdlAudioCallBack(void *userdata, uint8_t *stream, int len);
 
     AvMsgQueue m_queue;
     std::string m_filePath;

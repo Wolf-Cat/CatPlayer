@@ -3,6 +3,11 @@
 #include "libavutil/avutil.h"
 #include <QDebug>
 
+namespace
+{
+    int SDL_AUDIO_BUFFER_SIZE = 1024;
+}
+
 MyPlayer::MyPlayer()
 {
 
@@ -157,6 +162,10 @@ void MyPlayer::StreamComponentOpen(int streamIndex)
         m_audioStream = m_pFormatCtx->streams[streamIndex];
         m_audioCodecCtx = pCodecCtx;
         m_audioCodec = pCodec;
+
+        // 加载SDL所需音频参数
+        LoadAudioPara();
+
     } else if (pCodecCtx->codec_type == AVMEDIA_TYPE_VIDEO) {
         m_videoStream = m_pFormatCtx->streams[streamIndex];
         m_videoCodecCtx = pCodecCtx;
@@ -170,4 +179,28 @@ void MyPlayer::StreamComponentOpen(int streamIndex)
     {
         qDebug() << "avcodec_open2 failed";
     }
+}
+
+void MyPlayer::LoadAudioPara()
+{
+    SDL_AudioSpec wantedSpec, specOut;
+    wantedSpec.freq = m_audioCodecCtx->sample_rate;
+    wantedSpec.format = AUDIO_S16SYS;
+    wantedSpec.channels = m_audioCodecCtx->channels;
+    wantedSpec.silence = 0;
+    wantedSpec.samples = SDL_AUDIO_BUFFER_SIZE;
+    wantedSpec.callback = SdlAudioCallBack;
+    wantedSpec.userdata = this;
+
+    if (SDL_OpenAudio(&wantedSpec, &specOut) < 0) {
+        av_log(NULL, AV_LOG_ERROR, "SDL_OpenAudio : %s\n", SDL_GetError());
+    }
+
+    // 开启音频
+    SDL_PauseAudio(0);
+}
+
+void MyPlayer::SdlAudioCallBack(void *userdata, uint8_t *stream, int len)
+{
+
 }
