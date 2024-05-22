@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
     MainWindow w;
     w.show();
 
-    av_register_all();
+    //av_register_all();
     w.Init();
 
     SDL_version sdlVer;

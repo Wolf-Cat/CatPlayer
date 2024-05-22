@@ -1,4 +1,5 @@
 #include "MediaCentre.h"
+#include "../player/MyPlayer.h"
 
 MediaCentre::MediaCentre(QObject *parent) : QObject(parent)
 {

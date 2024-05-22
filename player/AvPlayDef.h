@@ -6,7 +6,23 @@ extern "C"
     #include "SDL.h"
     #include "SDL_mutex.h"
     #include "libavformat/avformat.h"
+    #include "libavutil/imgutils.h"
+    #include "libavutil/pixfmt.h"
+    #include "libswscale/swscale.h"
 }
+
+#include <QLabel>
+
+struct Global {
+    static QLabel *m_label;
+    static Global& GetInstance()
+    {
+        static Global instance;
+        return instance;
+    }
+
+    static void UpdateImage(AVFrame *pFrame);
+};
 
 struct FrameQueue {
 

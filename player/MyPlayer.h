@@ -27,7 +27,6 @@ public:
     void InitAvEnviroment(const std::string& filePath);
     static int ReadDataThread(void *arg);
     static int DecodeVideoThread(void *arg);
-
     void InitAVPacketQueue();
     void InitAVFrameQueue();
     void StreamComponentOpen(int streamIndex);   // 根据流索引得到流AVStream和打开相关组件

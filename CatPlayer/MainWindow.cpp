@@ -1,5 +1,6 @@
 #include "MainWindow.h"
 #include "ui_Mainwindow.h"
+#include "AvPlayDef.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -10,6 +11,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 void MainWindow::Init()
 {
+    Global::GetInstance().m_label = ui->videoLabel;
     m_mediaCenter.Init();
 }
 

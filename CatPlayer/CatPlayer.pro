@@ -32,7 +32,8 @@ SOURCES += \
     MediaCentre.cpp \
     MainWindow.cpp \
     AvMsgQueue.cpp \
-    ../player/MyPlayer.cpp  \
+    ../player/MyPlayer.cpp \
+    ../player/AvPlayDef.cpp
 
 HEADERS += \
     TitleBar.h \

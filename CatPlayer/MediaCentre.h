@@ -3,9 +3,9 @@
 
 #include <QObject>
 #include <memory>
-#include "../player/MyPlayer.h"
 #include "SDL.h"
 
+class MyPlayer;
 class MediaCentre : public QObject
 {
     Q_OBJECT
@@ -16,8 +16,6 @@ public:
     static int PlayerMsgloop(void* arg);
     void SetMediaSourcePath(std::string path);
     void StopPlayer();
-
-signals:
 
 public slots:
 

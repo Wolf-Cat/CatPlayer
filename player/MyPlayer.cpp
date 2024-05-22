@@ -1,7 +1,6 @@
 #include "MyPlayer.h"
 #include "libavutil/log.h"
 #include "libavutil/avutil.h"
-#include "AvPlayDef.h"
 #include <QDebug>
 
 MyPlayer::MyPlayer()
@@ -111,8 +110,11 @@ int MyPlayer::DecodeVideoThread(void *arg)
         if (pPlayer->m_videoPacketQueue.GetPacket(true, &pkt) == 0) {
             if (1) {
                 int ret = avcodec_decode_video2(pPlayer->m_videoCodecCtx, pFrame, &frameFinished, &pkt);
+                if (pFrame->pict_type == AV_PICTURE_TYPE_I) {    // 是否是I帧
+                    int a = 0;
+                }
                 if (frameFinished) {
-                    int k = 1;
+                    Global::GetInstance().UpdateImage(pFrame);
                 }
                 if (ret < 0) {
                     QString err = QString(av_myerr2str(ret));
@@ -123,9 +125,6 @@ int MyPlayer::DecodeVideoThread(void *arg)
                 av_packet_unref(&pkt);
             }
         }
-
-
-
     }
 
 }
