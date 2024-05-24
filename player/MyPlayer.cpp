@@ -284,7 +284,7 @@ int MyPlayer::DecodeAudioFrame()
                 int outSize = av_samples_get_buffer_size(NULL, frame->channels, outCount, AV_SAMPLE_FMT_S16, 0);
 
                 unsigned int audioBufferSize = m_audioBufferSize;
-                av_fast_malloc(m_pAudioBuffer, &audioBufferSize, outSize);
+                av_fast_malloc(&m_pAudioBuffer, &audioBufferSize, outSize);
 
                 // 重采样后的采样点个数
                 int nCovertLen = swr_convert(m_audioSwrCtx, outDatabuff, outCount, inData,
