@@ -5,7 +5,7 @@
 
 namespace
 {
-    int SDL_AUDIO_BUFFER_SIZE = 1024;
+    int SDL_AUDIO_BUFFER_DEFAULT_SIZE = 1024;
 }
 
 MyPlayer::MyPlayer()
@@ -25,7 +25,6 @@ MyPlayer::MyPlayer()
 
 void MyPlayer::InitAvEnviroment(const std::string& filePath)
 {
-    m_filePath = filePath;
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER) == 0)
     {
         av_log(NULL, AV_LOG_DEBUG, "SDL init video audio timer success, %s", SDL_GetError());
@@ -163,8 +162,8 @@ void MyPlayer::StreamComponentOpen(int streamIndex)
         m_audioCodecCtx = pCodecCtx;
         m_audioCodec = pCodec;
 
-        // 加载SDL所需音频参数
-        LoadAudioPara();
+        // 加载SDL所需音频参数, 并打开扬声器
+        OpenAudioDevice();
 
     } else if (pCodecCtx->codec_type == AVMEDIA_TYPE_VIDEO) {
         m_videoStream = m_pFormatCtx->streams[streamIndex];
@@ -181,14 +180,14 @@ void MyPlayer::StreamComponentOpen(int streamIndex)
     }
 }
 
-void MyPlayer::LoadAudioPara()
+void MyPlayer::OpenAudioDevice()
 {
     SDL_AudioSpec wantedSpec, specOut;
     wantedSpec.freq = m_audioCodecCtx->sample_rate;
     wantedSpec.format = AUDIO_S16SYS;
     wantedSpec.channels = m_audioCodecCtx->channels;
     wantedSpec.silence = 0;
-    wantedSpec.samples = SDL_AUDIO_BUFFER_SIZE;
+    wantedSpec.samples = SDL_AUDIO_BUFFER_DEFAULT_SIZE;
     wantedSpec.callback = SdlAudioCallBack;
     wantedSpec.userdata = this;
 
@@ -200,7 +199,44 @@ void MyPlayer::LoadAudioPara()
     SDL_PauseAudio(0);
 }
 
-void MyPlayer::SdlAudioCallBack(void *userdata, uint8_t *stream, int len)
+void MyPlayer::SdlAudioCallBack(void *userdata, uint8_t *stream, int needLen /*扬声器需要的数据字节数*/)     // 会在SDL创建的线程中去回调运行
 {
+    MyPlayer *player = (MyPlayer *)userdata;
+    int actualRetLen = 0;   //    真正给到扬声器所需要的数据的大小
+    int decodecAudioSize = 0;   // 解码后的音频字节数
 
+    while (needLen > 0) {
+        if (player->m_audioBufferUsedSize >= player->m_audioBufferSize) {   // 缓冲区数据已经用完，需要解码新数据
+            decodecAudioSize = player->DecodeAudioFrame();
+            if (decodecAudioSize < 0) {   // 解码失败，补静音包
+                player->m_audioBufferSize = SDL_AUDIO_BUFFER_DEFAULT_SIZE;
+                player->m_pAudioBuffer = NULL;
+            } else {
+                player->m_audioBufferSize = decodecAudioSize;
+            }
+
+            player->m_audioBufferUsedSize = 0;
+        }
+
+        // 目前缓冲区剩余的数据
+        int curRmainLen = player->m_audioBufferSize - player->m_audioBufferUsedSize;
+        if (curRmainLen > needLen) {
+            actualRetLen = needLen;    // 最多给到扬声器本此实际需要的数据量
+        }
+
+        if (player->m_pAudioBuffer != NULL) {
+            memcpy(stream, player->m_pAudioBuffer + player->m_audioBufferUsedSize, actualRetLen);
+        } else {
+            memset(stream, 0, actualRetLen);
+        }
+
+        needLen -= actualRetLen;
+        stream += actualRetLen;
+        player->m_audioBufferUsedSize += actualRetLen;
+    }
+}
+
+int MyPlayer::DecodeAudioFrame()
+{
+    return 0;
 }
