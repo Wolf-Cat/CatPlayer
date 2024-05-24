@@ -268,6 +268,8 @@ int MyPlayer::DecodeAudioFrame()
 
             if (m_audioSwrCtx == NULL) {
                 if (m_audioCodecCtx->sample_fmt != AV_SAMPLE_FMT_S16) {
+                    m_audioSwrCtx = swr_alloc();
+
                     swr_alloc_set_opts(m_audioSwrCtx, 3, AV_SAMPLE_FMT_S16,
                                        m_audioCodecCtx->sample_rate, m_audioCodecCtx->channel_layout,
                                        m_audioCodecCtx->sample_fmt, m_audioCodecCtx->sample_rate,
