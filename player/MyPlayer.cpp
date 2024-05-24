@@ -241,7 +241,7 @@ int MyPlayer::DecodeAudioFrame()
     int retDataSize = -1;   // 实际解码数据的大小
     int ret = -1;
     AVPacket pkt;
-    AVFrame frame;
+    AVFrame *frame = av_frame_alloc();
 
     for (;;) {
         if (m_audioPacketQueue.GetPacket(true, &pkt) < 0) {
@@ -258,7 +258,7 @@ int MyPlayer::DecodeAudioFrame()
         while (ret >= 0) {
             //int got_frame_ptr = 0;
             //ret = avcodec_decode_audio4(m_audioCodecCtx, &frame, &got_frame_ptr, &pkt);
-            ret = avcodec_receive_frame(m_audioCodecCtx, &frame);
+            ret = avcodec_receive_frame(m_audioCodecCtx, frame);
             if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
                 break;
             } else if (ret < 0) {
@@ -276,22 +276,22 @@ int MyPlayer::DecodeAudioFrame()
                     swr_init(m_audioSwrCtx);
                 }
             } else {           // 是否需要进行重采样
-                const uint8_t **inData =(const uint8_t **)frame.extended_data;
+                const uint8_t **inData =(const uint8_t **)frame->extended_data;
                 uint8_t **outDatabuff = &m_pAudioBuffer;
-                int outCount = frame.nb_samples + 256;   // 输出的采样点个数, 256为冗余值，最多不超过 nb_samples + 256
-                int outSize = av_samples_get_buffer_size(NULL, frame.channels, outCount, AV_SAMPLE_FMT_S16, 0);
+                int outCount = frame->nb_samples + 256;   // 输出的采样点个数, 256为冗余值，最多不超过 nb_samples + 256
+                int outSize = av_samples_get_buffer_size(NULL, frame->channels, outCount, AV_SAMPLE_FMT_S16, 0);
 
                 unsigned int audioBufferSize = m_audioBufferSize;
                 av_fast_malloc(m_pAudioBuffer, &audioBufferSize, outSize);
 
                 // 重采样后的采样点个数
                 int nCovertLen = swr_convert(m_audioSwrCtx, outDatabuff, outCount, inData,
-                                             frame.nb_samples);
+                                             frame->nb_samples);
 
-                retDataSize = nCovertLen * frame.channels * av_get_bytes_per_sample(AV_SAMPLE_FMT_S16);
+                retDataSize = nCovertLen * frame->channels * av_get_bytes_per_sample(AV_SAMPLE_FMT_S16);
             }
 
-            av_frame_unref(&frame);
+            av_frame_unref(frame);
 
             return retDataSize;
         }
