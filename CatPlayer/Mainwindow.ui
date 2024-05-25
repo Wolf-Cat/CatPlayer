@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>927</width>
-    <height>654</height>
+    <width>1418</width>
+    <height>865</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -29,8 +29,8 @@
      <rect>
       <x>41</x>
       <y>124</y>
-      <width>651</width>
-      <height>321</height>
+      <width>1331</width>
+      <height>551</height>
      </rect>
     </property>
     <property name="styleSheet">
@@ -43,8 +43,8 @@
    <widget class="CtrlBar" name="ctrlWidget" native="true">
     <property name="geometry">
      <rect>
-      <x>9</x>
-      <y>489</y>
+      <x>50</x>
+      <y>700</y>
       <width>771</width>
       <height>81</height>
      </rect>
@@ -56,7 +56,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>927</width>
+     <width>1418</width>
      <height>26</height>
     </rect>
    </property>
