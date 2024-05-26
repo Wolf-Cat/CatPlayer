@@ -1,6 +1,9 @@
 #ifndef AVPLAYDEF_H
 #define AVPLAYDEF_H
 
+#include <QObject>
+#include <QImage>
+
 extern "C"
 {
     #include "SDL.h"
@@ -11,17 +14,21 @@ extern "C"
     #include "libswscale/swscale.h"
 }
 
-#include <QLabel>
+class Global : public QObject {
 
-struct Global {
-    static QLabel *m_label;
+    Q_OBJECT
+
+public:
     static Global& GetInstance()
     {
         static Global instance;
         return instance;
     }
 
-    static void UpdateImage(AVFrame *pFrame);
+    void ConvertToImage(AVFrame *pFrame);
+
+signals:
+    void SigUpdateImage(QImage img);
 };
 
 struct FrameQueue {
@@ -73,6 +80,9 @@ struct AvPacketQueue {
             if (pFirstNode != NULL) {
                 *pOut = *(pFirstNode->pkt);
                 count--;
+                //av_packet_move_ref(pOut, pFirstNode->pkt);
+                pFirstNode = pFirstNode->next;
+                //free(pFirstNode);
                 ret = 0;
                 break;
             }

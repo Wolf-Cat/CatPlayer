@@ -106,28 +106,32 @@ int MyPlayer::DecodeVideoThread(void *arg)
 {
     MyPlayer *pPlayer = (MyPlayer *)arg;
 
-    int frameFinished = -1;
-    AVPacket pkt;
-    AVFrame *pFrame = av_frame_alloc();
+    int ret = -1;
 
     for (;;) {
+        AVPacket pkt;
+        AVFrame *pFrame = av_frame_alloc();
+
         if (pPlayer->m_videoPacketQueue.GetPacket(true, &pkt) == 0) {
-            if (1) {
-                int ret = avcodec_decode_video2(pPlayer->m_videoCodecCtx, pFrame, &frameFinished, &pkt);
-                if (pFrame->pict_type == AV_PICTURE_TYPE_I) {    // 是否是I帧
-                    int a = 0;
-                }
-                if (frameFinished) {
-                    Global::GetInstance().UpdateImage(pFrame);
-                }
-                if (ret < 0) {
-                    QString err = QString(av_myerr2str(ret));
-                    qDebug() << "avcodec_decode_video2 err: " << err;
+            ret = avcodec_send_packet(pPlayer->m_videoCodecCtx, &pkt);
+            av_packet_unref(&pkt);
+
+            if (ret < 0) {
+                QString err = QString(av_myerr2str(ret));
+                qDebug() << "avcodec_decode_video2 err: " << err;
+            }
+
+            while (ret >= 0) {
+                ret = avcodec_receive_frame(pPlayer->m_videoCodecCtx, pFrame);
+                if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
+                    break;
+                } else if (ret < 0) {
+                    av_frame_unref(pFrame);
                 }
 
-                // 如果返回值为正值，则表示已经读取了一部分数据但是还不足以解码一帧。这通常发生在流的末端，或者解码器需要更多数据来完成解码时
-                av_packet_unref(&pkt);
+                Global::GetInstance().ConvertToImage(pFrame);
             }
+
         }
     }
 

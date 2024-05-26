@@ -1,8 +1,6 @@
 #include "AvPlayDef.h"
 
-QLabel* Global::m_label = nullptr;
-
-void Global::UpdateImage(AVFrame *pFrame)
+void Global::ConvertToImage(AVFrame *pFrame)
 {
     SwsContext *swsContext = sws_getContext(
            pFrame->width,
@@ -31,13 +29,7 @@ void Global::UpdateImage(AVFrame *pFrame)
 
     QImage image((uchar*)dstPic.data[0], pFrame->width, pFrame->height, QImage::Format_RGB888);
 
-    QPixmap pixmap = QPixmap::fromImage(image);
-    m_label->setPixmap(pixmap);
-}
+    emit SigUpdateImage(image);
 
-/*
- QImage img((const unsigned char*)pFrame->data[0],
-         pFrame->width, pFrame->height, pFrame->linesize[0],
-         QImage::Format_RGB888
-     );
- */
+    av_frame_unref(pFrame);
+}
