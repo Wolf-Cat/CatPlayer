@@ -107,9 +107,9 @@ int MyPlayer::DecodeVideoThread(void *arg)
     MyPlayer *pPlayer = (MyPlayer *)arg;
 
     int ret = -1;
+    AVPacket pkt;
 
     for (;;) {
-        AVPacket pkt;
         AVFrame *pFrame = av_frame_alloc();
 
         if (pPlayer->m_videoPacketQueue.GetPacket(true, &pkt) == 0) {
@@ -119,6 +119,7 @@ int MyPlayer::DecodeVideoThread(void *arg)
             if (ret < 0) {
                 QString err = QString(av_myerr2str(ret));
                 qDebug() << "avcodec_decode_video2 err: " << err;
+                continue;
             }
 
             while (ret >= 0) {
@@ -127,11 +128,11 @@ int MyPlayer::DecodeVideoThread(void *arg)
                     break;
                 } else if (ret < 0) {
                     av_frame_unref(pFrame);
+                    return ret;
                 }
 
                 Global::GetInstance().ConvertToImage(pFrame);
             }
-
         }
     }
 
