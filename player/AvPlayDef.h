@@ -55,7 +55,8 @@ struct AvPacketQueue {
 
         SDL_LockMutex(mutex);
         AVPacketNode *pNewNode = (AVPacketNode *)malloc(sizeof(AVPacketNode));
-        pNewNode->pkt = pkt;
+        pNewNode->pkt = av_packet_alloc();
+        av_packet_move_ref(pNewNode->pkt, pkt);
         pNewNode->next = NULL;
         if (pLastNode == NULL) {
             pFirstNode = pNewNode;
@@ -78,9 +79,8 @@ struct AvPacketQueue {
         for(;;)
         {
             if (pFirstNode != NULL) {
-                *pOut = *(pFirstNode->pkt);
+                av_packet_move_ref(pOut, pFirstNode->pkt);
                 count--;
-                //av_packet_move_ref(pOut, pFirstNode->pkt);
                 pFirstNode = pFirstNode->next;
                 //free(pFirstNode);
                 ret = 0;
