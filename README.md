@@ -62,5 +62,14 @@ AV_SAMPLE_FMT_S16
 int64_t av_gettime()           //从公元1970年1月1日0时0分0秒开始的微秒值
 int64_t av_gettime_relative()  // 返回开机后开始的微妙值
 
+* FFmpeg的架构组成
+libavcodec：编解码库。
+libavformat：音视频容器格式以及所支持的协议的封装和解析。
+libavutil：提供了一些公共函数，工具库。
+libavfilter：音视频的滤镜库，如视频加水印、音频变声等。
+libavdevice：支持众多设备数据的输入与输出，如读取摄像头数据、屏幕录制。
+libswresample, libavresample：提供音频的重采样工具库。
+libswscale：提供对视频图像进行色彩转换、缩放以及像素格式转换，如图像的 YUV 转换。
+libpostproc：多媒体后处理器。
 
 

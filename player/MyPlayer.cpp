@@ -48,16 +48,20 @@ void MyPlayer::InitAvEnviroment(const std::string& filePath)
     }
 
     for (int i = 0; i < m_pFormatCtx->nb_streams; i++) {
-        if (m_pFormatCtx->streams[i]->codec->codec_type == AVMEDIA_TYPE_AUDIO && m_audioIndex)
+        if (m_pFormatCtx->streams[i]->codec->codec_type == AVMEDIA_TYPE_AUDIO && m_audioIndex == -1)
         {
             m_audioIndex = i;
             StreamComponentOpen(m_audioIndex);
         }
 
-        if (m_pFormatCtx->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO && m_videoIndex)
+        if (m_pFormatCtx->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO && m_videoIndex == -1)
         {
             m_videoIndex = i;
             StreamComponentOpen(m_videoIndex);
+        }
+
+        if (m_audioIndex != -1 && m_videoIndex != -1) {
+            break;
         }
     }
 
@@ -153,22 +157,20 @@ void MyPlayer::StreamComponentOpen(int streamIndex)
         return;
     }
 
-    AVCodecContext *pCodecCtx = avcodec_alloc_context3(NULL);   // 创建解码器上下文
-
+    AVCodecID codec_id = m_pFormatCtx->streams[streamIndex]->codecpar->codec_id;
+    AVCodec *pCodec = avcodec_find_decoder(codec_id);             // 解码器
     int ret = 0;
+    AVCodecContext *pCodecCtx = avcodec_alloc_context3(pCodec);   // 创建解码器上下文
+
     ret = avcodec_parameters_to_context(pCodecCtx, m_pFormatCtx->streams[streamIndex]->codecpar);
     if (ret < 0) {
         return;
     }
 
-    AVCodec *pCodec = avcodec_find_decoder(pCodecCtx->codec_id);             // 解码器
     if (pCodecCtx->codec_type == AVMEDIA_TYPE_AUDIO) {
         m_audioStream = m_pFormatCtx->streams[streamIndex];
         m_audioCodecCtx = pCodecCtx;
         m_audioCodec = pCodec;
-
-        // 加载SDL所需音频参数, 并打开扬声器
-        OpenAudioDevice();
 
     } else if (pCodecCtx->codec_type == AVMEDIA_TYPE_VIDEO) {
         m_videoStream = m_pFormatCtx->streams[streamIndex];
@@ -182,6 +184,11 @@ void MyPlayer::StreamComponentOpen(int streamIndex)
     if (avcodec_open2(pCodecCtx, pCodec, NULL) < 0)  // Initialize the AVCodecContext to use the given AVCodec
     {
         qDebug() << "avcodec_open2 failed";
+    }
+
+    if (pCodecCtx->codec_type == AVMEDIA_TYPE_AUDIO) {
+        // 加载SDL所需音频参数, 并打开扬声器
+        OpenAudioDevice();
     }
 }
 
@@ -245,16 +252,15 @@ int MyPlayer::DecodeAudioFrame()
 {
     int retDataSize = -1;   // 实际解码数据的大小
     int ret = -1;
-    AVPacket pkt;
-    AVFrame *frame = av_frame_alloc();
 
     for (;;) {
-        if (m_audioPacketQueue.GetPacket(true, &pkt) < 0) {
-            break;
+        AVFrame *pFrame = av_frame_alloc();
+        if (m_audioPacketQueue.GetPacket(true, &m_audioPacket) < 0) {
+            return ret;
         }
 
-        ret = avcodec_send_packet(m_audioCodecCtx, &pkt);
-        av_packet_unref(&pkt);
+        ret = avcodec_send_packet(m_audioCodecCtx, &m_audioPacket);
+        av_packet_unref(&m_audioPacket);
 
         if (ret < 0) {
             return retDataSize;
@@ -263,10 +269,12 @@ int MyPlayer::DecodeAudioFrame()
         while (ret >= 0) {
             //int got_frame_ptr = 0;
             //ret = avcodec_decode_audio4(m_audioCodecCtx, &frame, &got_frame_ptr, &pkt);
-            ret = avcodec_receive_frame(m_audioCodecCtx, frame);
+            ret = avcodec_receive_frame(m_audioCodecCtx, pFrame);
+            char *a = av_myerr2str(ret);
             if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
                 break;
             } else if (ret < 0) {
+                QString str = QString(av_myerr2str(ret));
                 return retDataSize;
             }
 
@@ -283,22 +291,22 @@ int MyPlayer::DecodeAudioFrame()
                     swr_init(m_audioSwrCtx);
                 }
             } else {           // 是否需要进行重采样
-                const uint8_t **inData =(const uint8_t **)frame->extended_data;
+                const uint8_t **inData =(const uint8_t **)m_audioFrame.extended_data;
                 uint8_t **outDatabuff = &m_pAudioBuffer;
-                int outCount = frame->nb_samples + 256;   // 输出的采样点个数, 256为冗余值，最多不超过 nb_samples + 256
-                int outSize = av_samples_get_buffer_size(NULL, frame->channels, outCount, AV_SAMPLE_FMT_S16, 0);
+                int outCount = m_audioFrame.nb_samples + 256;   // 输出的采样点个数, 256为冗余值，最多不超过 nb_samples + 256
+                int outSize = av_samples_get_buffer_size(NULL, m_audioFrame.channels, outCount, AV_SAMPLE_FMT_S16, 0);
 
                 unsigned int audioBufferSize = m_audioBufferSize;
                 av_fast_malloc(&m_pAudioBuffer, &audioBufferSize, outSize);
 
                 // 重采样后的采样点个数
                 int nCovertLen = swr_convert(m_audioSwrCtx, outDatabuff, outCount, inData,
-                                             frame->nb_samples);
+                                             m_audioFrame.nb_samples);
 
-                retDataSize = nCovertLen * frame->channels * av_get_bytes_per_sample(AV_SAMPLE_FMT_S16);
+                retDataSize = nCovertLen * m_audioFrame.channels * av_get_bytes_per_sample(AV_SAMPLE_FMT_S16);
             }
 
-            av_frame_unref(frame);
+            av_frame_unref(&m_audioFrame);
 
             return retDataSize;
         }
