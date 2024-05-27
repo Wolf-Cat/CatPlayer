@@ -12,8 +12,8 @@ MainWindow::MainWindow(QWidget *parent) :
 void MainWindow::Init()
 {
     m_mediaCenter.Init();
-
-    connect(&Global::GetInstance(), &Global::SigUpdateImage, this, &MainWindow::UpdateImage);
+    Global::GetInstance().label = ui->videoLabel;
+    connect(&Global::GetInstance(), &Global::SigUpdateImage, this, &MainWindow::UpdateImage, Qt::QueuedConnection);
 }
 
 void MainWindow::UpdateImage(QImage img)

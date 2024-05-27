@@ -114,9 +114,10 @@ int MyPlayer::DecodeVideoThread(void *arg)
 
     int ret = -1;
     AVPacket pkt;
+    AVFrame *pFrame = av_frame_alloc();
 
     for (;;) {
-        AVFrame *pFrame = av_frame_alloc();
+
 
         if (pPlayer->m_videoPacketQueue.GetPacket(true, &pkt) == 0) {
             ret = avcodec_send_packet(pPlayer->m_videoCodecCtx, &pkt);
@@ -137,9 +138,12 @@ int MyPlayer::DecodeVideoThread(void *arg)
                     return ret;
                 }
 
+                qDebug() << "get image";
+                //av_frame_unref(pFrame);
                 Global::GetInstance().ConvertToImage(pFrame);
-                SDL_Delay(300);
             }
+
+            SDL_Delay(50);
         }
     }
 

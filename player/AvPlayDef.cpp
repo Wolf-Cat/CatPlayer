@@ -1,7 +1,12 @@
 #include "AvPlayDef.h"
+#include <QDebug>
 
 void Global::ConvertToImage(AVFrame *pFrame)
 {
+    if (pFrame == NULL) {
+        qDebug() << "video frame is null";
+        return;
+    }
     /*
     SwsContext *sws_ctx = sws_getContext(
             pFrame->width, pFrame->height, AV_PIX_FMT_YUV420P,
@@ -54,14 +59,25 @@ void Global::ConvertToImage(AVFrame *pFrame)
     avpicture_fill((AVPicture *)&dstPic, buffer, AV_PIX_FMT_RGB24, pFrame->width, pFrame->height);
 
     // 执行转换
-    sws_scale(swsContext, (const uint8_t *const *)pFrame->data, pFrame->linesize, 0, pFrame->height, dstPic.data, dstPic.linesize);
+    int ret = sws_scale(swsContext, (const uint8_t *const *)pFrame->data, pFrame->linesize, 0, pFrame->height, dstPic.data, dstPic.linesize);
 
     // 转换完成后释放SwsContext
     sws_freeContext(swsContext);
 
     QImage image((uchar*)dstPic.data[0], pFrame->width, pFrame->height, QImage::Format_RGB888);
 
-    emit SigUpdateImage(image);
+    if (image.isNull()) {
+        QString retErr = QString(av_myerr2str(ret));
+        qDebug() << "Image is NULL";
+    } else {
+        static int frameNum = 0;
+        frameNum++;
+        qDebug() << "num Image frame num: " << frameNum;   // 目前能渲染180帧 Image, 宽高修改一半后也是一样, 跟QImage分配次数有关
+    }
 
-    av_frame_unref(pFrame);
+    QPixmap pixmap = QPixmap::fromImage(image);
+    label->setPixmap(pixmap);
+    //emit SigUpdateImage(image);
+    av_free(buffer);
+    //av_free(pFrame);
 }

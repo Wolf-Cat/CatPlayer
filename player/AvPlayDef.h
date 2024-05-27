@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QImage>
+#include <QLabel>
 
 extern "C"
 {
@@ -17,7 +18,6 @@ extern "C"
 class Global : public QObject {
 
     Q_OBJECT
-
 public:
     static Global& GetInstance()
     {
@@ -27,6 +27,7 @@ public:
 
     void ConvertToImage(AVFrame *pFrame);
 
+    QLabel *label;
 signals:
     void SigUpdateImage(QImage img);
 };
