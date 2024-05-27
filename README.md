@@ -62,6 +62,11 @@ AV_SAMPLE_FMT_S16
 int64_t av_gettime()           //从公元1970年1月1日0时0分0秒开始的微秒值
 int64_t av_gettime_relative()  // 返回开机后开始的微妙值
 
+
+* 总结的一些教训
+1. 分配和释放AVPacket和AVFrame，尽量用FFmpeg自带的av_packet_alloc/av_packet_unref/av_packet_move_unref   
+   av_frame/av_frame_unref 这些，不要使用new/malloc去自动分配
+
 * FFmpeg的架构组成
 libavcodec：编解码库。
 libavformat：音视频容器格式以及所支持的协议的封装和解析。
