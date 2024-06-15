@@ -26,5 +26,11 @@ int main(int argc, char *argv[])
     qDebug() << "FFmpeg的版本：" << av_version_info();
     qDebug() << "SDL的版本：" << sdlVer.major << " " << sdlVer.minor;
 
+    int nSoundDevice = SDL_GetNumAudioDevices(0);
+
+    for (int i = 0; i < nSoundDevice; i++) {
+       printf("Audio device %d: %s\n", i, SDL_GetAudioDeviceName(i, 0));
+    }
+
     return a.exec();
 }

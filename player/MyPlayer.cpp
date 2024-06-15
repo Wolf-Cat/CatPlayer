@@ -65,7 +65,7 @@ void MyPlayer::InitAvEnviroment(const std::string& filePath)
         }
     }
 
-    av_dump_format(m_pFormatCtx, 0, "Touch_The_Sky.mp4", 0);
+    av_dump_format(m_pFormatCtx, 0, "testVideo.mp4", 0);
 
     m_audioPacket = av_packet_alloc();
     m_audioFrame = av_frame_alloc();
@@ -215,7 +215,8 @@ void MyPlayer::OpenAudioDevice()
     wantedSpec.callback = SdlAudioCallBack;
     wantedSpec.userdata = (void *)this;
 
-    if (SDL_OpenAudio(&wantedSpec, &specOut) < 0) {
+    int ret = SDL_OpenAudio(&wantedSpec, NULL);
+    if (ret < 0) {
         av_log(NULL, AV_LOG_ERROR, "SDL_OpenAudio : %s\n", SDL_GetError());
     }
 
@@ -223,7 +224,7 @@ void MyPlayer::OpenAudioDevice()
     SDL_PauseAudio(0);
 }
 
-void MyPlayer::SdlAudioCallBack(void *userdata, uint8_t *stream, int needLen /*扬声器需要的数据字节数*/)     // 会在SDL创建的线程中去回调运行
+void MyPlayer::SdlAudioCallBack(void *userdata, Uint8 *stream, int needLen /*扬声器需要的数据字节数*/)     // 会在SDL创建的线程中去回调运行
 {
     MyPlayer *player = (MyPlayer *)userdata;
     int actualRetLen = 0;   //    真正给到扬声器所需要的数据的大小
@@ -244,12 +245,12 @@ void MyPlayer::SdlAudioCallBack(void *userdata, uint8_t *stream, int needLen /*�
 
         // 目前缓冲区剩余的数据
         int curRmainLen = player->m_audioBufferSize - player->m_audioBufferUsedSize;
-        if (curRmainLen > needLen) {
-            actualRetLen = needLen;    // 最多给到扬声器本此实际需要的数据量
-        }
+
+        // 最多给到扬声器本此实际需要的数据量
+        actualRetLen = (curRmainLen > needLen) ? needLen : curRmainLen;
 
         if (player->m_pAudioBuffer != NULL) {
-            memcpy(stream, player->m_pAudioBuffer + player->m_audioBufferUsedSize, actualRetLen);
+            memcpy(stream, (uint8_t *)(player->m_pAudioBuffer + player->m_audioBufferUsedSize), actualRetLen);
         } else {
             memset(stream, 0, actualRetLen);
         }
@@ -257,6 +258,7 @@ void MyPlayer::SdlAudioCallBack(void *userdata, uint8_t *stream, int needLen /*�
         needLen -= actualRetLen;
         stream += actualRetLen;
         player->m_audioBufferUsedSize += actualRetLen;
+        qDebug() << "pull_audio_data stream ： " << stream;
     }
 }
 
@@ -292,7 +294,7 @@ int MyPlayer::DecodeAudioFrame()
                 if (m_audioCodecCtx->sample_fmt != AV_SAMPLE_FMT_S16) {
                     m_audioSwrCtx = swr_alloc();
 
-                    swr_alloc_set_opts(m_audioSwrCtx, 3, AV_SAMPLE_FMT_S16,
+                    swr_alloc_set_opts(m_audioSwrCtx, AV_CH_LAYOUT_STEREO, AV_SAMPLE_FMT_S16,
                                        m_audioCodecCtx->sample_rate, m_audioCodecCtx->channel_layout,
                                        m_audioCodecCtx->sample_fmt, m_audioCodecCtx->sample_rate,
                                        0, NULL);
@@ -307,8 +309,7 @@ int MyPlayer::DecodeAudioFrame()
             int outCount = m_audioFrame->nb_samples + 256;   // 输出的采样点个数, 256为冗余值，最多不超过 nb_samples + 256
             int outSize = av_samples_get_buffer_size(NULL, m_audioFrame->channels, outCount, AV_SAMPLE_FMT_S16, 0);
 
-            unsigned int audioBufferSize = m_audioBufferSize;
-            av_fast_malloc(&m_pAudioBuffer, &audioBufferSize, outSize);
+            av_fast_malloc(&m_pAudioBuffer, &m_audioBufferSize, outSize);
 
             // 重采样后的采样点个数
             int nCovertLen = swr_convert(m_audioSwrCtx, outDatabuff, outCount, inData,

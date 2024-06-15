@@ -32,7 +32,7 @@ public:
     void InitAVFrameQueue();
     void StreamComponentOpen(int streamIndex);   // 根据流索引得到流AVStream和打开相关组件
     void OpenAudioDevice();
-    static void SdlAudioCallBack(void *userdata, uint8_t *stream, int needLen);
+    static void SdlAudioCallBack(void *userdata, Uint8 *stream, int needLen);
     int DecodeAudioFrame();
 
     AvMsgQueue m_queue;
@@ -51,8 +51,8 @@ public:
     AVPacket *m_audioPacket;
     AVFrame *m_audioFrame;
     uint8_t *m_pAudioBuffer = NULL;
-    uint8_t m_audioBufferSize = 0;      // 音频缓冲区大小字节数, 此处其实不用太纠结索引从0还是1开始，因为一个字节不会影响音频播放
-    uint8_t m_audioBufferUsedSize = 0;  // 缓冲区已经使用的音频字节数
+    unsigned int m_audioBufferSize = 0;      // 音频缓冲区大小字节数, 此处其实不用太纠结索引从0还是1开始，因为一个字节不会影响音频播放
+    unsigned int m_audioBufferUsedSize = 0;  // 缓冲区已经使用的音频字节数
 
     struct SwrContext* m_audioSwrCtx = NULL;   // 音频重采样上下文
 
