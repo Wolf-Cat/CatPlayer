@@ -48,8 +48,8 @@ public:
     AVCodec *m_audioCodec = NULL;
     AvPacketQueue m_audioPacketQueue;
 
-    AVPacket m_audioPacket;
-    AVFrame m_audioFrame;
+    AVPacket *m_audioPacket;
+    AVFrame *m_audioFrame;
     uint8_t *m_pAudioBuffer = NULL;
     uint8_t m_audioBufferSize = 0;      // 音频缓冲区大小字节数, 此处其实不用太纠结索引从0还是1开始，因为一个字节不会影响音频播放
     uint8_t m_audioBufferUsedSize = 0;  // 缓冲区已经使用的音频字节数

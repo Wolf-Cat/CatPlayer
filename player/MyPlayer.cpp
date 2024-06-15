@@ -25,14 +25,14 @@ MyPlayer::MyPlayer()
 
 void MyPlayer::InitAvEnviroment(const std::string& filePath)
 {
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER) == 0)
+    if (SDL_Init(SDL_INIT_AUDIO | SDL_INIT_TIMER) == 0)
     {
         av_log(NULL, AV_LOG_DEBUG, "SDL init video audio timer success, %s", SDL_GetError());
     }
 
     // 获得媒体文件上下文
     int ret = 100;
-    ret = avformat_open_input(&m_pFormatCtx, "F:/CatPlayer/build-CatPlayer-Desktop_Qt_5_10_1_MinGW_32bit-Debug/debug/testVideo.mp4", NULL, NULL);
+    ret = avformat_open_input(&m_pFormatCtx, "testVideo.mp4", NULL, NULL);
     if (ret < 0)
     {
        QString err = av_myerr2str(ret);
@@ -65,7 +65,10 @@ void MyPlayer::InitAvEnviroment(const std::string& filePath)
         }
     }
 
-    av_dump_format(m_pFormatCtx, 0, "F:/CatPlayer/build-CatPlayer-Desktop_Qt_5_10_1_MinGW_32bit-Debug/debug/testVideo.mp4", 0);
+    av_dump_format(m_pFormatCtx, 0, "Touch_The_Sky.mp4", 0);
+
+    m_audioPacket = av_packet_alloc();
+    m_audioFrame = av_frame_alloc();
 
     // 初始化音视频包队列（AVPacket)
     InitAVPacketQueue();
@@ -77,6 +80,8 @@ void MyPlayer::InitAvEnviroment(const std::string& filePath)
 
     // 创建视频包解码线程
     m_pDecodeVideoThread = std::make_shared<std::thread>(&MyPlayer::DecodeVideoThread, this);
+
+    OpenAudioDevice();
 }
 
 int MyPlayer::ReadDataThread(void *arg)
@@ -119,7 +124,7 @@ int MyPlayer::DecodeVideoThread(void *arg)
     for (;;) {
 
 
-        if (pPlayer->m_videoPacketQueue.GetPacket(true, &pkt) == 0) {
+        if (pPlayer->m_videoPacketQueue.GetPacket(false, &pkt) == 0) {
             ret = avcodec_send_packet(pPlayer->m_videoCodecCtx, &pkt);
             av_packet_unref(&pkt);
 
@@ -138,12 +143,11 @@ int MyPlayer::DecodeVideoThread(void *arg)
                     return ret;
                 }
 
-                qDebug() << "get image";
                 //av_frame_unref(pFrame);
                 Global::GetInstance().ConvertToImage(pFrame);
             }
 
-            SDL_Delay(50);
+            SDL_Delay(40);
         }
     }
 
@@ -178,6 +182,7 @@ void MyPlayer::StreamComponentOpen(int streamIndex)
         m_audioStream = m_pFormatCtx->streams[streamIndex];
         m_audioCodecCtx = pCodecCtx;
         m_audioCodec = pCodec;
+        //av_opt_set(m_audioCodecCtx->priv_data, "tune", "zerolatency", 0);
 
     } else if (pCodecCtx->codec_type == AVMEDIA_TYPE_VIDEO) {
         m_videoStream = m_pFormatCtx->streams[streamIndex];
@@ -195,7 +200,7 @@ void MyPlayer::StreamComponentOpen(int streamIndex)
 
     if (pCodecCtx->codec_type == AVMEDIA_TYPE_AUDIO) {
         // 加载SDL所需音频参数, 并打开扬声器
-        OpenAudioDevice();
+        //OpenAudioDevice();
     }
 }
 
@@ -208,7 +213,7 @@ void MyPlayer::OpenAudioDevice()
     wantedSpec.silence = 0;
     wantedSpec.samples = SDL_AUDIO_BUFFER_DEFAULT_SIZE;
     wantedSpec.callback = SdlAudioCallBack;
-    wantedSpec.userdata = this;
+    wantedSpec.userdata = (void *)this;
 
     if (SDL_OpenAudio(&wantedSpec, &specOut) < 0) {
         av_log(NULL, AV_LOG_ERROR, "SDL_OpenAudio : %s\n", SDL_GetError());
@@ -261,60 +266,59 @@ int MyPlayer::DecodeAudioFrame()
     int ret = -1;
 
     for (;;) {
-        AVFrame *pFrame = av_frame_alloc();
-        if (m_audioPacketQueue.GetPacket(true, &m_audioPacket) < 0) {
+
+        if (m_audioPacketQueue.GetPacket(false, m_audioPacket) < 0) {
+            break;
+        }
+
+        ret = avcodec_send_packet(m_audioCodecCtx, m_audioPacket);
+        av_packet_unref(m_audioPacket);
+
+        if (ret < 0) {
             return ret;
         }
 
-        ret = avcodec_send_packet(m_audioCodecCtx, &m_audioPacket);
-        av_packet_unref(&m_audioPacket);
-
-        if (ret < 0) {
-            return retDataSize;
-        }
-
-        while (true) {
-            //int got_frame_ptr = 0;
-            //ret = avcodec_decode_audio4(m_audioCodecCtx, &frame, &got_frame_ptr, &pkt);
-            ret = avcodec_receive_frame(m_audioCodecCtx, pFrame);
-            char *a = av_myerr2str(ret);
+        while (ret >= 0) {
+            ret = avcodec_receive_frame(m_audioCodecCtx, m_audioFrame);
             if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
                 break;
             } else if (ret < 0) {
                 QString str = QString(av_myerr2str(ret));
-                return retDataSize;
-            } else if (ret == 0) {
-                if (m_audioSwrCtx == NULL) {
-                    if (m_audioCodecCtx->sample_fmt != AV_SAMPLE_FMT_S16) {
-                        m_audioSwrCtx = swr_alloc();
-
-                        swr_alloc_set_opts(m_audioSwrCtx, 3, AV_SAMPLE_FMT_S16,
-                                           m_audioCodecCtx->sample_rate, m_audioCodecCtx->channel_layout,
-                                           m_audioCodecCtx->sample_fmt, m_audioCodecCtx->sample_rate,
-                                           0, NULL);
-
-                        swr_init(m_audioSwrCtx);
-                    }
-                } else {           // 是否需要进行重采样
-                    const uint8_t **inData =(const uint8_t **)m_audioFrame.extended_data;
-                    uint8_t **outDatabuff = &m_pAudioBuffer;
-                    int outCount = m_audioFrame.nb_samples + 256;   // 输出的采样点个数, 256为冗余值，最多不超过 nb_samples + 256
-                    int outSize = av_samples_get_buffer_size(NULL, m_audioFrame.channels, outCount, AV_SAMPLE_FMT_S16, 0);
-
-                    unsigned int audioBufferSize = m_audioBufferSize;
-                    av_fast_malloc(&m_pAudioBuffer, &audioBufferSize, outSize);
-
-                    // 重采样后的采样点个数
-                    int nCovertLen = swr_convert(m_audioSwrCtx, outDatabuff, outCount, inData,
-                                                 m_audioFrame.nb_samples);
-
-                    retDataSize = nCovertLen * m_audioFrame.channels * av_get_bytes_per_sample(AV_SAMPLE_FMT_S16);
-                }
-
-                av_frame_unref(&m_audioFrame);
-
-                return retDataSize;
+                av_frame_unref(m_audioFrame);
+                return ret;
             }
+
+            if (m_audioSwrCtx == NULL) {
+                if (m_audioCodecCtx->sample_fmt != AV_SAMPLE_FMT_S16) {
+                    m_audioSwrCtx = swr_alloc();
+
+                    swr_alloc_set_opts(m_audioSwrCtx, 3, AV_SAMPLE_FMT_S16,
+                                       m_audioCodecCtx->sample_rate, m_audioCodecCtx->channel_layout,
+                                       m_audioCodecCtx->sample_fmt, m_audioCodecCtx->sample_rate,
+                                       0, NULL);
+
+                    swr_init(m_audioSwrCtx);
+                }
+            }
+
+            // 进行重采样
+            const uint8_t **inData =(const uint8_t **)m_audioFrame->extended_data;
+            uint8_t **outDatabuff = &m_pAudioBuffer;
+            int outCount = m_audioFrame->nb_samples + 256;   // 输出的采样点个数, 256为冗余值，最多不超过 nb_samples + 256
+            int outSize = av_samples_get_buffer_size(NULL, m_audioFrame->channels, outCount, AV_SAMPLE_FMT_S16, 0);
+
+            unsigned int audioBufferSize = m_audioBufferSize;
+            av_fast_malloc(&m_pAudioBuffer, &audioBufferSize, outSize);
+
+            // 重采样后的采样点个数
+            int nCovertLen = swr_convert(m_audioSwrCtx, outDatabuff, outCount, inData,
+                                         m_audioFrame->nb_samples);
+
+            retDataSize = nCovertLen * m_audioFrame->channels * av_get_bytes_per_sample(AV_SAMPLE_FMT_S16);
+
+            av_frame_unref(m_audioFrame);
+
+            return retDataSize;
         }
     }
 
