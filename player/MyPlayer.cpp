@@ -32,7 +32,7 @@ void MyPlayer::InitAvEnviroment(const std::string& filePath)
 
     // 获得媒体文件上下文
     int ret = 100;
-    ret = avformat_open_input(&m_pFormatCtx, "testVideo.mp4", NULL, NULL);
+    ret = avformat_open_input(&m_pFormatCtx, "testVideo2.mp4", NULL, NULL);
     if (ret < 0)
     {
        QString err = av_myerr2str(ret);
@@ -81,6 +81,7 @@ void MyPlayer::InitAvEnviroment(const std::string& filePath)
     // 创建视频包解码线程
     m_pDecodeVideoThread = std::make_shared<std::thread>(&MyPlayer::DecodeVideoThread, this);
 
+    // 加载SDL所需音频参数, 并打开扬声器
     OpenAudioDevice();
 }
 
@@ -122,7 +123,6 @@ int MyPlayer::DecodeVideoThread(void *arg)
     AVFrame *pFrame = av_frame_alloc();
 
     for (;;) {
-
 
         if (pPlayer->m_videoPacketQueue.GetPacket(false, &pkt) == 0) {
             ret = avcodec_send_packet(pPlayer->m_videoCodecCtx, &pkt);
@@ -182,7 +182,6 @@ void MyPlayer::StreamComponentOpen(int streamIndex)
         m_audioStream = m_pFormatCtx->streams[streamIndex];
         m_audioCodecCtx = pCodecCtx;
         m_audioCodec = pCodec;
-        //av_opt_set(m_audioCodecCtx->priv_data, "tune", "zerolatency", 0);
 
     } else if (pCodecCtx->codec_type == AVMEDIA_TYPE_VIDEO) {
         m_videoStream = m_pFormatCtx->streams[streamIndex];
@@ -196,11 +195,6 @@ void MyPlayer::StreamComponentOpen(int streamIndex)
     if (avcodec_open2(pCodecCtx, pCodec, NULL) < 0)  // Initialize the AVCodecContext to use the given AVCodec
     {
         qDebug() << "avcodec_open2 failed";
-    }
-
-    if (pCodecCtx->codec_type == AVMEDIA_TYPE_AUDIO) {
-        // 加载SDL所需音频参数, 并打开扬声器
-        //OpenAudioDevice();
     }
 }
 

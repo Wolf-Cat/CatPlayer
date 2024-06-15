@@ -76,7 +76,11 @@ void Global::ConvertToImage(AVFrame *pFrame)
     }
 
     QPixmap pixmap = QPixmap::fromImage(image);
-    label->setPixmap(pixmap);
+    if (label != nullptr)
+    {
+        label->setPixmap(pixmap);
+    }
+
     //emit SigUpdateImage(image);
     av_free(buffer);
     //av_free(pFrame);
