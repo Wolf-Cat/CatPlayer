@@ -68,6 +68,8 @@ public:
     std::shared_ptr<std::thread> m_pDecodeVideoThread = nullptr;
 
     // 音视频同步相关
+    double m_audioClock = 0;   // 音频时钟
+    double m_videoClock = 0;   // 视频时钟
 
     // 其余
     bool m_bQuit = false;

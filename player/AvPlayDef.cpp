@@ -83,5 +83,6 @@ void Global::ConvertToImage(AVFrame *pFrame)
 
     //emit SigUpdateImage(image);
     av_free(buffer);
+    av_frame_unref(pFrame);
     //av_free(pFrame);
 }

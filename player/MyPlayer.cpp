@@ -122,6 +122,11 @@ int MyPlayer::DecodeVideoThread(void *arg)
     AVPacket pkt;
     AVFrame *pFrame = av_frame_alloc();
 
+    AVRational time_base = pPlayer->m_videoStream->time_base;   // 1 / 90000
+    AVRational fps = av_guess_frame_rate(pPlayer->m_pFormatCtx, pPlayer->m_videoStream, NULL);  // 帧率，60
+    double frameDuration = 0;   // 一帧的播放时长
+    double frameConvertPts = 0;        // 最后转化的pts
+
     for (;;) {
 
         if (pPlayer->m_videoPacketQueue.GetPacket(false, &pkt) == 0) {
@@ -143,11 +148,23 @@ int MyPlayer::DecodeVideoThread(void *arg)
                     return ret;
                 }
 
-                //av_frame_unref(pFrame);
+                if (fps.den > 0 && fps.num > 0) {
+                    frameDuration = av_q2d(fps);  // 将AVRational 对象由分数转换为小数，便于转换，得到结果单位是毫秒 60, a.num / (double) a.den = 25;
+                } else {
+                    frameDuration = 0;
+                }
+
+                // 将源pts转化为以秒为单位的时间
+                if (pFrame->pts == AV_NOPTS_VALUE) {
+                    frameConvertPts = NAN;
+                } else {
+                    frameConvertPts = pFrame->pts * av_q2d(time_base);  // 0.04s, 0.08s, 0.16s   (a.num / (double) a.den) = 25
+                }
+
                 Global::GetInstance().ConvertToImage(pFrame);
             }
 
-            SDL_Delay(40);
+            SDL_Delay(20);
         }
     }
 
@@ -310,6 +327,8 @@ int MyPlayer::DecodeAudioFrame()
                                          m_audioFrame->nb_samples);
 
             retDataSize = nCovertLen * m_audioFrame->channels * av_get_bytes_per_sample(AV_SAMPLE_FMT_S16);
+
+            m_audioClock = m_audioFrame->pts + (double) m_audioFrame->nb_samples / m_audioFrame->sample_rate;  // 1024， 2048， 3072 + 23ms = 1024.023s
 
             av_frame_unref(m_audioFrame);
 
