@@ -65,7 +65,7 @@ void MyPlayer::InitAvEnviroment(const std::string& filePath)
         }
     }
 
-    av_dump_format(m_pFormatCtx, 0, "testVideo.mp4", 0);
+    av_dump_format(m_pFormatCtx, 0, "movie.mp4", 0);
 
     m_audioPacket = av_packet_alloc();
     m_audioFrame = av_frame_alloc();
@@ -80,6 +80,8 @@ void MyPlayer::InitAvEnviroment(const std::string& filePath)
 
     // 创建视频包解码线程
     m_pDecodeVideoThread = std::make_shared<std::thread>(&MyPlayer::DecodeVideoThread, this);
+
+    m_pSyncVideoRender = std::make_shared<std::thread>(&MyPlayer::SyncVideoThread, this);
 
     // 加载SDL所需音频参数, 并打开扬声器
     OpenAudioDevice();
@@ -171,10 +173,36 @@ int MyPlayer::DecodeVideoThread(void *arg)
                 //Global::GetInstance().ConvertToImage(pFrame);
             }
 
-            //SDL_Delay(20);
+            SDL_Delay(10);
         }
     }
 
+}
+
+int MyPlayer::SyncVideoThread(void *arg)
+{
+    MyPlayer *pPlayer = (MyPlayer *)arg;
+
+    VideoFrame vFrame;
+    vFrame.frame = av_frame_alloc();
+
+    for (;;) {
+        int idiff = 5;
+        if (pPlayer->m_decodeVFrameQue.GetFramePic(vFrame))
+        {
+            //Global::GetInstance().ConvertToImage(vFrame.frame);
+            //av_frame_move_ref(m_pVFrame, vFrame.frame);
+
+            if (vFrame.curClock + vFrame.duration < pPlayer->m_audioClock) {
+                Global::GetInstance().ConvertToImage(vFrame.frame);   // 音频的时钟比当前帧时间快，则迅速播放视频
+            } else {   // 视频更快，则需要暂停与音频时钟的差值时间再去播放视频
+                double diff = vFrame.curClock + vFrame.duration - pPlayer->m_audioClock;
+                idiff = int(diff * 1000);
+                SDL_Delay(idiff);
+                Global::GetInstance().ConvertToImage(vFrame.frame);
+            }
+        }
+    }
 }
 
 void MyPlayer::InitAVPacketQueue()
@@ -337,8 +365,8 @@ int MyPlayer::DecodeAudioFrame()
 
             retDataSize = nCovertLen * m_audioFrame->channels * av_get_bytes_per_sample(AV_SAMPLE_FMT_S16);
 
-            m_audioClock = m_audioFrame->pts + (double) m_audioFrame->nb_samples / m_audioFrame->sample_rate;  // 1024， 2048， 3072 + 23ms = 1024.023s
-            qDebug() << "Get audioClock: " << m_audioClock << "s";
+            m_audioClock = (m_audioFrame->pts) * av_q2d(m_audioStream->time_base);  // + (double) m_audioFrame->nb_samples / m_audioFrame->sample_rate;  // 1024 / 44100 + 23ms
+            qDebug() <<"audioFrame pts: " << m_audioFrame->pts << "Get audioClock: " << m_audioClock << "s";
 
             av_frame_unref(m_audioFrame);
 

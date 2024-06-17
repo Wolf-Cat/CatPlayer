@@ -18,9 +18,12 @@ void MainWindow::Init()
     m_mediaCenter.Init();
     Global::GetInstance().label = ui->videoLabel;
     connect(&Global::GetInstance(), &Global::SigUpdateImage, this, &MainWindow::UpdateImage, Qt::QueuedConnection);
-    QTimer::singleShot(20, this, [=]() {
+
+    /*
+    QTimer::singleShot(40, this, [=]() {
         RefreshVideo();
     });
+    */
 }
 
 void MainWindow::RefreshVideo()
@@ -30,17 +33,19 @@ void MainWindow::RefreshVideo()
     int idiff = 5;
     if (m_mediaCenter.m_pPlayer->m_decodeVFrameQue.GetFramePic(vFrame))
     {
+        //av_frame_move_ref(m_pVFrame, vFrame.frame);
         if (vFrame.curClock + vFrame.duration < m_mediaCenter.m_pPlayer->m_audioClock) {
-            ConvertToImage(vFrame.frame);
-        } else {
+            ConvertToImage(vFrame.frame);   // 音频的时钟比当前帧时间快，则迅速播放视频
+        } else {   // 视频更快，则需要暂停与音频时钟的差值时间再去播放视频
             double diff = vFrame.curClock + vFrame.duration - m_mediaCenter.m_pPlayer->m_audioClock;
             idiff = int(diff * 1000);
-        }
-    }
 
-    QTimer::singleShot(idiff, this, [=]() {
-        RefreshVideo();
-    });
+            QTimer::singleShot(idiff, this, [=]() {
+                ConvertToImage(vFrame.frame);
+            });
+        }
+
+    }
 }
 
 void MainWindow::UpdateImage(QImage img)
@@ -103,6 +108,8 @@ void MainWindow::ConvertToImage(AVFrame *pFrame)
 
     av_free(buffer);
     av_frame_unref(pFrame);
+
+    RefreshVideo();
 }
 
 MainWindow::~MainWindow()

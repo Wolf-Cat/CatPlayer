@@ -55,13 +55,13 @@ struct DecodeVideoFrameQueue {
             return;
         }
 
+        SDL_LockMutex(mutex);
+
         VideoFrame vFrame;
         vFrame.frame = av_frame_alloc();
         av_frame_move_ref(vFrame.frame, pFrame);
         vFrame.curClock = curClock;
         vFrame.duration = duration;
-
-        SDL_LockMutex(mutex);
         picQue.emplace(vFrame);
 
         SDL_CondSignal(cond);
@@ -77,6 +77,7 @@ struct DecodeVideoFrameQueue {
             }
 
             av_frame_move_ref(vOutFrame.frame, picQue.front().frame);
+            //av_frame_free(&picQue.front().frame);
             vOutFrame.curClock = picQue.front().curClock;
             vOutFrame.duration = picQue.front().duration;
             picQue.pop();

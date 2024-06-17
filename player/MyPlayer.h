@@ -28,6 +28,7 @@ public:
     void InitAvEnviroment(const std::string& filePath);
     static int ReadDataThread(void *arg);
     static int DecodeVideoThread(void *arg);
+    static int SyncVideoThread(void *arg);
     void InitAVPacketQueue();
     void InitAVFrameQueue();
     void StreamComponentOpen(int streamIndex);   // 根据流索引得到流AVStream和打开相关组件
@@ -72,6 +73,7 @@ public:
     // 音视频同步相关
     double m_audioClock = 0;   // 音频时钟
     double m_videoClock = 0;   // 视频时钟
+    std::shared_ptr<std::thread> m_pSyncVideoRender = nullptr;  // 用来同步视频到音频的线程
 
     // 其余
     bool m_bQuit = false;

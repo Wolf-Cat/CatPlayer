@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1544</width>
-    <height>942</height>
+    <height>977</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -30,7 +30,7 @@
       <x>41</x>
       <y>114</y>
       <width>1481</width>
-      <height>661</height>
+      <height>701</height>
      </rect>
     </property>
     <property name="styleSheet">
@@ -39,12 +39,15 @@
     <property name="text">
      <string>视频画面渲染区</string>
     </property>
+    <property name="scaledContents">
+     <bool>true</bool>
+    </property>
    </widget>
    <widget class="CtrlBar" name="ctrlWidget" native="true">
     <property name="geometry">
      <rect>
-      <x>30</x>
-      <y>790</y>
+      <x>20</x>
+      <y>830</y>
       <width>771</width>
       <height>81</height>
      </rect>
