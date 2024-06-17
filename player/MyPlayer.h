@@ -35,6 +35,7 @@ public:
     static void SdlAudioCallBack(void *userdata, Uint8 *stream, int needLen);
     int DecodeAudioFrame();
 
+    void SynchronizeVideoClock(AVFrame *srcFrame, double &pts);
     AvMsgQueue m_queue;
 
 public:
@@ -62,6 +63,7 @@ public:
     AVCodecContext *m_videoCodecCtx = NULL;
     AVCodec *m_videoCodec = NULL;
     AvPacketQueue m_videoPacketQueue;
+    DecodeVideoFrameQueue m_decodeVFrameQue;   // 解码后的视频帧队列，用来作为音视频同步
     int m_videoWidth = 0;
     int m_videoHeight = 0;
 

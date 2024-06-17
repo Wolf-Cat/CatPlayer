@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QImage>
 #include <QLabel>
+#include <queue>
 
 extern "C"
 {
@@ -13,6 +14,10 @@ extern "C"
     #include "libavutil/imgutils.h"
     #include "libavutil/pixfmt.h"
     #include "libswscale/swscale.h"
+}
+
+namespace {
+    const int VIDEO_FRAME_QUEUE_SIZE = 9;  // 最多缓存9帧
 }
 
 class Global : public QObject {
@@ -32,8 +37,56 @@ signals:
     void SigUpdateImage(QImage img);
 };
 
-struct FrameQueue {
+struct VideoFrame {   // 解码后的AVFrame
+    AVFrame *frame = NULL;
+    double curClock = 0;   // 该帧目前的时钟
+    double duration = 0;   // 该帧视频播放时长，单位秒
+};
 
+struct DecodeVideoFrameQueue {
+    std::queue<VideoFrame> picQue;
+    int count = 0;
+    bool isAbort = false;
+    SDL_mutex *mutex = NULL;
+    SDL_cond *cond = NULL;
+
+    void PushFramePic(AVFrame *pFrame, double curClock, double duration) {
+        if (pFrame == NULL) {
+            return;
+        }
+
+        VideoFrame vFrame;
+        //vFrame.frame = av_frame_alloc();
+        av_frame_move_ref(vFrame.frame, pFrame);
+        vFrame.curClock = curClock;
+        vFrame.duration = duration;
+
+        SDL_LockMutex(mutex);
+        picQue.emplace(vFrame);
+
+        SDL_CondSignal(cond);
+        SDL_UnlockMutex(mutex);
+    }
+
+    bool GetFramePic(VideoFrame &vOutFrame) {
+        SDL_LockMutex(mutex);
+
+        for (;;) {
+            if (picQue.empty()) {
+                SDL_CondWait(cond, mutex);
+            }
+
+            av_frame_move_ref(vOutFrame.frame, picQue.front().frame);
+            vOutFrame.curClock = picQue.front().curClock;
+            vOutFrame.duration = picQue.front().duration;
+            picQue.pop();
+            break;
+        }
+
+        SDL_UnlockMutex(mutex);
+
+        return true;
+    }
 };
 
 struct AVPacketNode {

@@ -8,6 +8,7 @@ namespace Ui {
 class MainWindow;
 }
 
+class AVFrame;
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -15,13 +16,16 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     void Init();
+    void RefreshVideo();
     void UpdateImage(QImage img);
+    void ConvertToImage(AVFrame *pFrame);
     ~MainWindow();
 
+    MediaCentre m_mediaCenter;
 private:
     Ui::MainWindow *ui;
 
-    MediaCentre m_mediaCenter;
+
 };
 
 #endif // MAINWINDOW_H

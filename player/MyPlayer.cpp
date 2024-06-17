@@ -122,9 +122,11 @@ int MyPlayer::DecodeVideoThread(void *arg)
     AVPacket pkt;
     AVFrame *pFrame = av_frame_alloc();
 
-    AVRational time_base = pPlayer->m_videoStream->time_base;   // 1 / 90000
+    // AVStream->time_base 这是表示帧时间戳的基本时间单位（以秒为单位）。
+
+    AVRational time_base = pPlayer->m_videoStream->time_base;   // 1 / 90000, AVStream中的time_base精度更准，以秒为单位
     AVRational fps = av_guess_frame_rate(pPlayer->m_pFormatCtx, pPlayer->m_videoStream, NULL);  // 帧率，60
-    double frameDuration = 0;   // 一帧的播放时长
+    double perVideoFrameDuration = 0;   // 一帧的播放时长
     double frameConvertPts = 0;        // 最后转化的pts
 
     for (;;) {
@@ -149,22 +151,27 @@ int MyPlayer::DecodeVideoThread(void *arg)
                 }
 
                 if (fps.den > 0 && fps.num > 0) {
-                    frameDuration = av_q2d(fps);  // 将AVRational 对象由分数转换为小数，便于转换，得到结果单位是毫秒 60, a.num / (double) a.den = 25;
+                    perVideoFrameDuration = av_q2d({fps.den, fps.num});  // 将AVRational 对象由分数转换为小数，得到每一帧的持续时长，得到结果单位是秒;
+                    // 一秒除以帧率，得到的每一帧播放持续时长
                 } else {
-                    frameDuration = 0;
+                    perVideoFrameDuration = 0;
                 }
 
                 // 将源pts转化为以秒为单位的时间
                 if (pFrame->pts == AV_NOPTS_VALUE) {
                     frameConvertPts = NAN;
                 } else {
-                    frameConvertPts = pFrame->pts * av_q2d(time_base);  // 0.04s, 0.08s, 0.16s   (a.num / (double) a.den) = 25
+                    frameConvertPts = pFrame->pts * av_q2d(time_base);  //  (a.num / (double) a.den)
                 }
 
-                Global::GetInstance().ConvertToImage(pFrame);
+                // 同步当前的video clock;
+                //pPlayer->SynchronizeVideoClock(pFrame, frameConvertPts);
+                pPlayer->m_decodeVFrameQue.PushFramePic(pFrame, frameConvertPts, perVideoFrameDuration);
+
+                //Global::GetInstance().ConvertToImage(pFrame);
             }
 
-            SDL_Delay(20);
+            //SDL_Delay(20);
         }
     }
 
@@ -177,6 +184,9 @@ void MyPlayer::InitAVPacketQueue()
 
     m_videoPacketQueue.mutex = SDL_CreateMutex();
     m_videoPacketQueue.cond = SDL_CreateCond();
+
+    m_decodeVFrameQue.mutex = SDL_CreateMutex();
+    m_decodeVFrameQue.cond = SDL_CreateCond();
 }
 
 void MyPlayer::StreamComponentOpen(int streamIndex)
@@ -269,7 +279,6 @@ void MyPlayer::SdlAudioCallBack(void *userdata, Uint8 *stream, int needLen /*扬
         needLen -= actualRetLen;
         stream += actualRetLen;
         player->m_audioBufferUsedSize += actualRetLen;
-        qDebug() << "pull_audio_data stream ： " << stream;
     }
 }
 
@@ -329,6 +338,7 @@ int MyPlayer::DecodeAudioFrame()
             retDataSize = nCovertLen * m_audioFrame->channels * av_get_bytes_per_sample(AV_SAMPLE_FMT_S16);
 
             m_audioClock = m_audioFrame->pts + (double) m_audioFrame->nb_samples / m_audioFrame->sample_rate;  // 1024， 2048， 3072 + 23ms = 1024.023s
+            qDebug() << "Get audioClock: " << m_audioClock << "s";
 
             av_frame_unref(m_audioFrame);
 
@@ -337,4 +347,19 @@ int MyPlayer::DecodeAudioFrame()
     }
 
     return 0;
+}
+
+void MyPlayer::SynchronizeVideoClock(AVFrame *srcFrame, double &pts)
+{
+    if (pts == 0) {
+        pts = m_videoClock;
+    } else {
+        m_videoClock = pts;
+    }
+
+    /*
+    double frameDelayTime = av_q2d(m_videoCodecCtx->time_base);   // den = 2997, num = 1
+    frameDelayTime += srcFrame->repeat_pict * (frameDelayTime * 0.5);  // repeat_pict 该帧是否是重复帧，并且重复了几次
+    m_videoClock += frameDelayTime;
+    */
 }

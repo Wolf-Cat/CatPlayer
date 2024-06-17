@@ -19,7 +19,7 @@ public:
 
 public slots:
 
-private:
+public:
     std::shared_ptr<MyPlayer> m_pPlayer = nullptr;
 
     SDL_mutex *m_pMutex = nullptr;
