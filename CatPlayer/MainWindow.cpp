@@ -26,7 +26,7 @@ void MainWindow::Init()
 void MainWindow::RefreshVideo()
 {
     VideoFrame vFrame;
-    // vFrame.frame = av_frame_alloc();
+    vFrame.frame = av_frame_alloc();
     int idiff = 5;
     if (m_mediaCenter.m_pPlayer->m_decodeVFrameQue.GetFramePic(vFrame))
     {

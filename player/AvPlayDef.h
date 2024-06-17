@@ -56,7 +56,7 @@ struct DecodeVideoFrameQueue {
         }
 
         VideoFrame vFrame;
-        //vFrame.frame = av_frame_alloc();
+        vFrame.frame = av_frame_alloc();
         av_frame_move_ref(vFrame.frame, pFrame);
         vFrame.curClock = curClock;
         vFrame.duration = duration;
