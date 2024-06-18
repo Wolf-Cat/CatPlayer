@@ -17,8 +17,10 @@ void MainWindow::Init()
 {
     m_mediaCenter.Init();
     Global::GetInstance().label = ui->videoLabel;
+
     connect(&Global::GetInstance(), &Global::SigUpdateImage, this, &MainWindow::UpdateImage, Qt::QueuedConnection);
 
+    connect(&Global::GetInstance(), &Global::SigRenderFrame, this, &MainWindow::ConvertToImage, Qt::QueuedConnection);
     /*
     QTimer::singleShot(40, this, [=]() {
         RefreshVideo();
@@ -48,11 +50,11 @@ void MainWindow::RefreshVideo()
     }
 }
 
-void MainWindow::UpdateImage(QImage img)
+void MainWindow::UpdateImage(QPixmap img)
 {
     static int i = 0;
-    QPixmap pixmap = QPixmap::fromImage(img);
-    ui->videoLabel->setPixmap(pixmap);
+    //QPixmap pixmap = QPixmap::fromImage(img);
+    ui->videoLabel->setPixmap(img);
     //img.save(QString("./a%1.png").arg(i++),"PNG", 100);
 }
 
@@ -109,7 +111,7 @@ void MainWindow::ConvertToImage(AVFrame *pFrame)
     av_free(buffer);
     av_frame_unref(pFrame);
 
-    RefreshVideo();
+    // RefreshVideo();
 }
 
 MainWindow::~MainWindow()

@@ -34,7 +34,8 @@ public:
 
     QLabel *label;
 signals:
-    void SigUpdateImage(QImage img);
+    void SigUpdateImage(QPixmap img);
+    void SigRenderFrame(AVFrame *pFrame);
 };
 
 struct VideoFrame {   // 解码后的AVFrame

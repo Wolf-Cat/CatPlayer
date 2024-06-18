@@ -168,12 +168,12 @@ int MyPlayer::DecodeVideoThread(void *arg)
 
                 // 同步当前的video clock;
                 //pPlayer->SynchronizeVideoClock(pFrame, frameConvertPts);
-                pPlayer->m_decodeVFrameQue.PushFramePic(pFrame, frameConvertPts, perVideoFrameDuration);
+                // pPlayer->m_decodeVFrameQue.PushFramePic(pFrame, frameConvertPts, perVideoFrameDuration);
 
-                //Global::GetInstance().ConvertToImage(pFrame);
+                Global::GetInstance().ConvertToImage(pFrame);
             }
 
-            SDL_Delay(10);
+            //SDL_Delay(20);
         }
     }
 
@@ -201,6 +201,8 @@ int MyPlayer::SyncVideoThread(void *arg)
                 SDL_Delay(idiff);
                 Global::GetInstance().ConvertToImage(vFrame.frame);
             }
+
+            // emit Global::GetInstance().SigRenderFrame(vFrame.frame);
         }
     }
 }

@@ -17,7 +17,7 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     void Init();
     void RefreshVideo();
-    void UpdateImage(QImage img);
+    void UpdateImage(QPixmap img);
     void ConvertToImage(AVFrame *pFrame);
     ~MainWindow();
 

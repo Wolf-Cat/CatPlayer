@@ -78,11 +78,12 @@ void Global::ConvertToImage(AVFrame *pFrame)
     QPixmap pixmap = QPixmap::fromImage(image);
     if (label != nullptr)
     {
-        label->setPixmap(pixmap);
+        //label->setPixmap(pixmap);   // 崩溃问题在此处
     }
 
-    //emit SigUpdateImage(image);
     av_free(buffer);
     av_frame_unref(pFrame);
-    //av_free(pFrame);
+    // av_frame_free(&pFrame);
+
+    emit SigUpdateImage(pixmap);
 }
