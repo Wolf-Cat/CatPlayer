@@ -173,7 +173,7 @@ int MyPlayer::DecodeVideoThread(void *arg)
                 Global::GetInstance().ConvertToImage(pFrame);
             }
 
-            //SDL_Delay(20);
+            SDL_Delay(15);
         }
     }
 
