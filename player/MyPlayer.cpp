@@ -123,7 +123,7 @@ int MyPlayer::DecodeVideoThread(void *arg)
     int ret = -1;
     AVPacket pkt;
     AVFrame *pFrame = av_frame_alloc();
-
+    //av_frame_get_buffer(pFrame, 32);
     // AVStream->time_base 这是表示帧时间戳的基本时间单位（以秒为单位）。
 
     AVRational time_base = pPlayer->m_videoStream->time_base;   // 1 / 90000, AVStream中的time_base精度更准，以秒为单位
@@ -168,12 +168,12 @@ int MyPlayer::DecodeVideoThread(void *arg)
 
                 // 同步当前的video clock;
                 //pPlayer->SynchronizeVideoClock(pFrame, frameConvertPts);
-                // pPlayer->m_decodeVFrameQue.PushFramePic(pFrame, frameConvertPts, perVideoFrameDuration);
+                pPlayer->m_decodeVFrameQue.PushFramePic(pFrame, frameConvertPts, perVideoFrameDuration);
 
-                Global::GetInstance().ConvertToImage(pFrame);
+                // Global::GetInstance().ConvertToImage(pFrame);
             }
 
-            //SDL_Delay(20);
+            // SDL_Delay(15);
         }
     }
 
@@ -195,11 +195,13 @@ int MyPlayer::SyncVideoThread(void *arg)
 
             if (vFrame.curClock + vFrame.duration < pPlayer->m_audioClock) {
                 Global::GetInstance().ConvertToImage(vFrame.frame);   // 音频的时钟比当前帧时间快，则迅速播放视频
+                //emit Global::GetInstance().SigUpdateImage(vFrame.pixmap);
             } else {   // 视频更快，则需要暂停与音频时钟的差值时间再去播放视频
                 double diff = vFrame.curClock + vFrame.duration - pPlayer->m_audioClock;
                 idiff = int(diff * 1000);
                 SDL_Delay(idiff);
                 Global::GetInstance().ConvertToImage(vFrame.frame);
+                //emit Global::GetInstance().SigUpdateImage(vFrame.pixmap);
             }
 
             // emit Global::GetInstance().SigRenderFrame(vFrame.frame);

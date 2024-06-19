@@ -31,15 +31,18 @@ public:
     }
 
     void ConvertToImage(AVFrame *pFrame);
-
+    QImage m_img;
     QLabel *label;
+    AVPicture m_pic;
 signals:
-    void SigUpdateImage(QPixmap img);
+    void SigUpdateImage(const QImage& img);
     void SigRenderFrame(AVFrame *pFrame);
+    void SigImgData(uchar *data, int width, int height);
+    void SigAVPicture(uint8_t *pic, int width, int height);
 };
 
 struct VideoFrame {   // 解码后的AVFrame
-    AVFrame *frame = NULL;
+    AVFrame *frame;
     double curClock = 0;   // 该帧目前的时钟
     double duration = 0;   // 该帧视频播放时长，单位秒
 };
@@ -59,6 +62,8 @@ struct DecodeVideoFrameQueue {
         SDL_LockMutex(mutex);
 
         VideoFrame vFrame;
+        //Global::GetInstance().ConvertToImage(pFrame, vFrame.pixmap);
+
         vFrame.frame = av_frame_alloc();
         av_frame_move_ref(vFrame.frame, pFrame);
         vFrame.curClock = curClock;

@@ -55,35 +55,53 @@ void Global::ConvertToImage(AVFrame *pFrame)
     // 分配目标图像的内存
     int numBytes = avpicture_get_size(AV_PIX_FMT_RGB24, pFrame->width, pFrame->height);
     uint8_t *buffer = (uint8_t *)av_malloc(numBytes * sizeof(uint8_t));
-    AVPicture dstPic;
-    avpicture_fill((AVPicture *)&dstPic, buffer, AV_PIX_FMT_RGB24, pFrame->width, pFrame->height);
+    //AVPicture dstPic;
+    avpicture_fill((AVPicture *)&m_pic, buffer, AV_PIX_FMT_RGB24, pFrame->width, pFrame->height);
 
     // 执行转换
-    int ret = sws_scale(swsContext, (const uint8_t *const *)pFrame->data, pFrame->linesize, 0, pFrame->height, dstPic.data, dstPic.linesize);
-
+    int ret = sws_scale(swsContext, (const uint8_t *const *)pFrame->data, pFrame->linesize, 0, pFrame->height, m_pic.data, m_pic.linesize);
+    if (ret != 720) {
+        int a = 0;
+    }
     // 转换完成后释放SwsContext
     sws_freeContext(swsContext);
 
-    QImage image((uchar*)dstPic.data[0], pFrame->width, pFrame->height, QImage::Format_RGB888);
+    emit SigAVPicture(m_pic.data[0], pFrame->width, pFrame->height);
+    //int n = int(dstPic.linesize[0]);
+    //uchar *transData = (uchar*)malloc(int(dstPic.linesize[0]) + 1);
+    //memset(transData, 0, int(dstPic.linesize[0]) + 1);
+    //memcpy(transData, (uchar*)dstPic.data[0], int(dstPic.linesize[0]));
 
-    if (image.isNull()) {
-        QString retErr = QString(av_myerr2str(ret));
+    // emit SigImgData(transData, pFrame->width, pFrame->height);
+
+    //QByteArray byteArray((uchar*)dstPic.data[0]);
+    //m_img.fromData(byteArray);
+    /*
+    QImage tmpimage((uchar*)dstPic.data[0], pFrame->width, pFrame->height, QImage::Format_RGB888);
+    m_img = QImage((uchar*)dstPic.data[0], pFrame->width, pFrame->height, QImage::Format_RGB888).copy();
+    if (tmpimage.isNull()) {
         qDebug() << "Image is NULL";
     } else {
         static int frameNum = 0;
         frameNum++;
         qDebug() << "num Image frame num: " << frameNum;   // 目前能渲染180帧 Image, 宽高修改一半后也是一样, 跟QImage分配次数有关
     }
+    */
 
-    QPixmap pixmap = QPixmap::fromImage(image);
+    //QImage imaY = tmpimage.copy();
+    //emit SigUpdateImage(imaY);
+    /*
+    pixmap = QPixmap::fromImage(image);
     if (label != nullptr)
     {
         //label->setPixmap(pixmap);   // 崩溃问题在此处
     }
 
-    av_free(buffer);
+    */
+    //av_free(buffer);
+
     av_frame_unref(pFrame);
     // av_frame_free(&pFrame);
 
-    emit SigUpdateImage(pixmap);
+    // emit SigUpdateImage(image);
 }
