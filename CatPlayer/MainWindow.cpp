@@ -20,10 +20,7 @@ void MainWindow::Init()
 
     connect(&Global::GetInstance(), &Global::SigUpdateImage, this, &MainWindow::UpdateImage, Qt::QueuedConnection);
 
-    connect(&Global::GetInstance(), &Global::SigAVPicture, this, &MainWindow::SlotAVPicDisplay, Qt::QueuedConnection);
-    // connect(&Global::GetInstance(), &Global::SigRenderFrame, this, &MainWindow::ConvertToImage, Qt::QueuedConnection);
-
-    //connect(&Global::GetInstance(), &Global::SigImgData, this, &MainWindow::SlotSigImgData, Qt::QueuedConnection);
+    connect(&Global::GetInstance(), &Global::SigRenderFrame, this, &MainWindow::ConvertToImage, Qt::QueuedConnection);
     /*
     QTimer::singleShot(40, this, [=]() {
         RefreshVideo();
@@ -31,7 +28,6 @@ void MainWindow::Init()
     */
 }
 
-/*
 void MainWindow::RefreshVideo()
 {
     VideoFrame vFrame;
@@ -54,16 +50,11 @@ void MainWindow::RefreshVideo()
     }
 }
 
-*/
-void MainWindow::UpdateImage(QImage img)
+void MainWindow::UpdateImage(QPixmap img)
 {
     static int i = 0;
-    //QImage myImg = img.copy();
-
-    //bool b =img.save("test1.png");
-    //int a = 0;
-    QPixmap pixmap = QPixmap::fromImage(img);
-    ui->videoLabel->setPixmap(pixmap);
+    //QPixmap pixmap = QPixmap::fromImage(img);
+    ui->videoLabel->setPixmap(img);
     //img.save(QString("./a%1.png").arg(i++),"PNG", 100);
 }
 
@@ -121,27 +112,6 @@ void MainWindow::ConvertToImage(AVFrame *pFrame)
     av_frame_unref(pFrame);
 
     // RefreshVideo();
-}
-
-void MainWindow::SlotSigImgData(uchar *data, int width, int height)
-{
-    QImage image(data, width, height, QImage::Format_RGB888);
-    QPixmap pixmap = QPixmap::fromImage(image);
-    ui->videoLabel->setPixmap(pixmap);
-
-    //update();
-}
-
-void MainWindow::SlotAVPicDisplay(uint8_t *pic, int width, int height)
-{
-    QImage img((uchar*)pic, width, height, QImage::Format_RGB888);
-    if (img.isNull()) {
-        int a = 0;
-    }
-
-    QPixmap pixmap = QPixmap::fromImage(img);
-    ui->videoLabel->setPixmap(pixmap);
-    update();
 }
 
 MainWindow::~MainWindow()
