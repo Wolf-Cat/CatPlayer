@@ -62,11 +62,6 @@ AV_SAMPLE_FMT_S16
 int64_t av_gettime()           //从公元1970年1月1日0时0分0秒开始的微秒值
 int64_t av_gettime_relative()  // 返回开机后开始的微妙值
 
-
-* 总结的一些教训
-1. 分配和释放AVPacket和AVFrame，尽量用FFmpeg自带的av_packet_alloc/av_packet_unref/av_packet_move_unref   
-   av_frame/av_frame_unref 这些，不要使用new/malloc去自动分配
-
 * FFmpeg的架构组成
 libavcodec：编解码库。
 libavformat：音视频容器格式以及所支持的协议的封装和解析。
@@ -77,4 +72,12 @@ libswresample, libavresample：提供音频的重采样工具库。
 libswscale：提供对视频图像进行色彩转换、缩放以及像素格式转换，如图像的 YUV 转换。
 libpostproc：多媒体后处理器。
 
-
+* 总结的一些教训
+1. 分配和释放AVPacket和AVFrame，尽量用FFmpeg自带的av_packet_alloc/av_packet_unref/av_packet_move_unref   
+   av_frame/av_frame_unref 这些，不要使用new/malloc去自动分配
+   
+2. SDL_OpenAudio(&wantedSpec, NULL); 第二个参数设置为NULL, 才会按照请求的参数设置扬声器
+ 官方解释
+  If \c obtained is NULL, the audio
+ *  data passed to the callback function will be guaranteed to be in the
+ *  requested format
