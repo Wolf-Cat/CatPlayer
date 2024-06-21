@@ -72,12 +72,23 @@ libswresample, libavresample：提供音频的重采样工具库。
 libswscale：提供对视频图像进行色彩转换、缩放以及像素格式转换，如图像的 YUV 转换。
 libpostproc：多媒体后处理器。
 
-* 总结的一些教训
+* 总结的一些经验教训
 1. 分配和释放AVPacket和AVFrame，尽量用FFmpeg自带的av_packet_alloc/av_packet_unref/av_packet_move_unref   
    av_frame/av_frame_unref 这些，不要使用new/malloc去自动分配
-   
-2. SDL_OpenAudio(&wantedSpec, NULL); 第二个参数设置为NULL, 才会按照请求的参数设置扬声器
+
+2. 尽量不要直接对AVFrame/AVPacket指针去相互赋值，应该使用 av_frame_move_ref
+  
+3. SDL_OpenAudio(&wantedSpec, NULL); 第二个参数设置为NULL, 才会按照请求的参数设置扬声器
  官方解释
   If \c obtained is NULL, the audio
  *  data passed to the callback function will be guaranteed to be in the
  *  requested format
+
+4. avcodec_receive_frame 类的函数返回AVERROR(EAGAIN)为-11，意味着需要新的输入数据才能返回新的输出
+   在解码或编码时，编解码器可能会接收到多个输入帧/数据包而不返回帧，直到其内部缓冲区被填充为止
+
+5. 在进行音视频同步的时候AVFrame的pts字段对应AVStream的time_base时间基
+
+6. Qt中是无法直接显示YUV数据的，所以必须把YUV数据转换为RGB32再通过QImage显示到控件中
+
+7. QImage内部是动态申请内存的，所以如果一直不停申请的话，是会出现QImage: out of memory, returning null image错误的
