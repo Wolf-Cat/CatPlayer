@@ -34,7 +34,6 @@ av_read_frame              // 读取码流中的音频若干帧或者视频一�
 avcodec_receive_frame      // 从解码器上下文中不断去读取解码后的帧
 avcodec_decode_video2      // 将视频包解码成视频帧
 av_packet_unref            // 
-
 swr_convert    // 音频重采样
 
 * 使用到的FFmpeg重要结构体
@@ -50,7 +49,8 @@ AVCodecContext       // 解码器上下文
 AVCodec              // 解码器
 AVCodecParameters
 
-SwsContext     // 图像转换上下文，音频重采样上下文
+SwrContext      // 音频重采样上下文
+SwsContext      // 图像转换上下文
 
 * 使用的SDL重要函数
 SDL_OpenAudio    // 打开扬声器，会创建音频播放线程，调用回调函数
